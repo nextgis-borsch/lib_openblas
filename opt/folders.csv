@@ -7,7 +7,7 @@ driver/level2,driver/level2,,"c,txt"
 driver/level3,driver/level3,,"c,txt"
 driver/mapper,driver/mapper,skip,
 driver/others,driver/others,,"c,txt"
-exports,exports,skip,
+exports,exports,,gensymbol
 interface,interface,,"c,txt"
 interface/lapack,interface/lapack,,c
 interface/netlib,interface/netlib,skip,

@@ -81,6 +81,7 @@ endif()
 report_version(${PROJECT_NAME} ${VERSION})
 
 set(OpenBLAS_LIBNAME ${PROJECT_NAME})
+set(LIB_NAME ${OpenBLAS_LIBNAME})
 
 #######
 if(MSVC)
@@ -222,8 +223,6 @@ add_custom_command(
 add_custom_target(genconfig ALL DEPENDS openblas_config.h)
 add_dependencies(genconfig ${OpenBLAS_LIBNAME})
 
-
-set(LIB_NAME ${OpenBLAS_LIBNAME})
 if(BUILD_SHARED_LIBS)
     add_library(${LIB_NAME} SHARED ${LA_SOURCES} ${LAPACKE_SOURCES} ${TARGET_OBJS} ${OpenBLAS_DEF_FILE})
     if(MSVC)
