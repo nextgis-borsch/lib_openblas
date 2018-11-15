@@ -83,6 +83,9 @@ report_version(${PROJECT_NAME} ${VERSION})
 set(OpenBLAS_LIBNAME ${PROJECT_NAME})
 set(LIB_NAME ${OpenBLAS_LIBNAME})
 
+cmake_policy(SET CMP0040 OLD)
+cmake_policy(SET CMP0054 NEW)
+
 #######
 if(MSVC)
     option(BUILD_WITHOUT_LAPACK "Without LAPACK and LAPACKE (Only BLAS or CBLAS)" ON)
