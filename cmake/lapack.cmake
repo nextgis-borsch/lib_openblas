@@ -26,7 +26,7 @@ set(SCLAUX
 )
 
 set(DZLAUX
-  dbdsdc.f dbdsvdx.f 
+  dbdsdc.f dbdsvdx.f
   dbdsqr.f ddisna.f dlabad.f dlacpy.f dladiv.f dlae2.f  dlaebz.f
   dlaed0.f dlaed1.f dlaed2.f dlaed3.f dlaed4.f dlaed5.f dlaed6.f
   dlaed7.f dlaed8.f dlaed9.f dlaeda.f dlaev2.f dlagtf.f
@@ -42,14 +42,14 @@ set(DZLAUX
   dsteqr.f dsterf.f dlaisnan.f disnan.f
   dlartgp.f dlartgs.f
   ../INSTALL/dlamch.f ../INSTALL/dsecnd_${TIMER}.f
-  dgelq.f dgelqt.f dgelqt3.f dgemlq.f dgemlqt.f dgemqr.f dgeqr.f   
-  dgetsls.f dlamswlq.f dlamtsqr.f dlaswlq.f dlatsqr.f dtplqt.f  
-  dtplqt2.f dtpmlqt.f dsysv_aa.f dsytrf_aa.f dsytrs_aa.f dlasyf_aa.f  
-  dsytf2_rk.f dlasyf_rk.f dsytrf_rk.f dsytrs_3.f dsycon_3.f dsytri_3.f   
-  dsytri_3x.f dsysv_rk.f dsb2st_kernels.f dsbev_2stage.f dsbevd_2stage.f  
-  dsbevx_2stage.f dsyev_2stage.f dsyevd_2stage.f dsyevr_2stage.f  
-  dsyevx_2stage.f dsygv_2stage.f dsytrd_2stage.f dsytrd_sb2st.F 
-  dsytrd_sy2sb.f dlarfy.f         
+  dgelq.f dgelqt.f dgelqt3.f dgemlq.f dgemlqt.f dgemqr.f dgeqr.f
+  dgetsls.f dlamswlq.f dlamtsqr.f dlaswlq.f dlatsqr.f dtplqt.f
+  dtplqt2.f dtpmlqt.f dsysv_aa.f dsytrf_aa.f dsytrs_aa.f dlasyf_aa.f
+  dsytf2_rk.f dlasyf_rk.f dsytrf_rk.f dsytrs_3.f dsycon_3.f dsytri_3.f
+  dsytri_3x.f dsysv_rk.f dsb2st_kernels.f dsbev_2stage.f dsbevd_2stage.f
+  dsbevx_2stage.f dsyev_2stage.f dsyevd_2stage.f dsyevr_2stage.f
+  dsyevx_2stage.f dsygv_2stage.f dsytrd_2stage.f dsytrd_sb2st.F
+  dsytrd_sy2sb.f dlarfy.f
 )
 
 set(SLASRC
@@ -114,13 +114,13 @@ set(SLASRC
   sorbdb5.f sorbdb6.f sorcsd.f sorcsd2by1.f
   sgeqrt.f sgeqrt2.f sgeqrt3.f sgemqrt.f
   stpqrt.f stpqrt2.f stpmqrt.f stprfb.f spotri.f
-  sgelq.f  sgelqt.f sgelqt3.f sgemlq.f sgemlqt.f sgemqr.f sgeqr.f sgetsls.f    
-  slamswlq.f slamtsqr.f slaswlq.f slatsqr.f stplqt.f stplqt2.f stpmlqt.f    
-  ssysv_aa.f ssytrf_aa.f ssytrs_aa.f slasyf_aa.f ssytf2_rk.f slasyf_rk.f       
-  ssytrf_rk.f ssytrs_3.f ssycon_3.f ssytri_3.f ssytri_3x.f ssysv_rk.f        
-  ssb2st_kernels.f ssbev_2stage.f ssbevd_2stage.f ssbevx_2stage.f  
-  ssyev_2stage.f ssyevd_2stage.f ssyevr_2stage.f ssyevx_2stage.f 
-  ssygv_2stage.f ssytrd_2stage.f ssytrd_sb2st.F ssytrd_sy2sb.f slarfy.f         
+  sgelq.f  sgelqt.f sgelqt3.f sgemlq.f sgemlqt.f sgemqr.f sgeqr.f sgetsls.f
+  slamswlq.f slamtsqr.f slaswlq.f slatsqr.f stplqt.f stplqt2.f stpmlqt.f
+  ssysv_aa.f ssytrf_aa.f ssytrs_aa.f slasyf_aa.f ssytf2_rk.f slasyf_rk.f
+  ssytrf_rk.f ssytrs_3.f ssycon_3.f ssytri_3.f ssytri_3x.f ssysv_rk.f
+  ssb2st_kernels.f ssbev_2stage.f ssbevd_2stage.f ssbevx_2stage.f
+  ssyev_2stage.f ssyevd_2stage.f ssyevr_2stage.f ssyevx_2stage.f
+  ssygv_2stage.f ssytrd_2stage.f ssytrd_sb2st.F ssytrd_sy2sb.f slarfy.f
 )
 
 set(DSLASRC spotrs.f spotrf2.f)
@@ -268,13 +268,13 @@ set(DLASRC
   dorbdb5.f dorbdb6.f dorcsd.f dorcsd2by1.f
   dgeqrt.f dgeqrt2.f dgeqrt3.f dgemqrt.f
   dtpqrt.f dtpqrt2.f dtpmqrt.f dtprfb.f dpotri.f
-  dgelq.f dgelqt.f dgelqt3.f dgemlq.f dgemlqt.f dgemqr.f dgeqr.f dgetsls.f 
-  dlamswlq.f dlamtsqr.f dlaswlq.f dlatsqr.f dtplqt.f dtplqt2.f dtpmlqt.f 
-  dsysv_aa.f dsytrf_aa.f dsytrs_aa.f dlasyf_aa.f dsytf2_rk.f dlasyf_rk.f  
-  dsytrf_rk.f dsytrs_3.f dsycon_3.f dsytri_3.f dsytri_3x.f dsysv_rk.f   
-  dsb2st_kernels.f dsbev_2stage.f dsbevd_2stage.f dsbevx_2stage.f  
-  dsyev_2stage.f dsyevd_2stage.f dsyevr_2stage.f dsyevx_2stage.f  
-  dsygv_2stage.f dsytrd_2stage.f dsytrd_sb2st.F dsytrd_sy2sb.f dlarfy.f         
+  dgelq.f dgelqt.f dgelqt3.f dgemlq.f dgemlqt.f dgemqr.f dgeqr.f dgetsls.f
+  dlamswlq.f dlamtsqr.f dlaswlq.f dlatsqr.f dtplqt.f dtplqt2.f dtpmlqt.f
+  dsysv_aa.f dsytrf_aa.f dsytrs_aa.f dlasyf_aa.f dsytf2_rk.f dlasyf_rk.f
+  dsytrf_rk.f dsytrs_3.f dsycon_3.f dsytri_3.f dsytri_3x.f dsysv_rk.f
+  dsb2st_kernels.f dsbev_2stage.f dsbevd_2stage.f dsbevx_2stage.f
+  dsyev_2stage.f dsyevd_2stage.f dsyevr_2stage.f dsyevx_2stage.f
+  dsygv_2stage.f dsytrd_2stage.f dsytrd_sb2st.F dsytrd_sy2sb.f dlarfy.f
 )
 
 set(ZLASRC
@@ -384,4 +384,9 @@ set(LA_SOURCES "")
 foreach (LA_FILE ${LA_REL_SRC})
   list(APPEND LA_SOURCES "${NETLIB_LAPACK_DIR}/SRC/${LA_FILE}")
 endforeach ()
+
 set_source_files_properties(${LA_SOURCES} PROPERTIES COMPILE_FLAGS "${LAPACK_FFLAGS}")
+
+add_library(lapackw STATIC ${LA_SOURCES})
+
+# list(APPEND TARGET_OBJS "$<TARGET_OBJECTS:lapackw>")

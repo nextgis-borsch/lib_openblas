@@ -1,6 +1,6 @@
 .,.,,"md,h,c,Changelog.txt,GotoBLAS_00License.txt,GotoBLAS_01Readme.txt,LICENSE,S"
 benchmark,benchmark,skip,
-cmake,cmake,,"system.cmake,lapack.cmake,lapacke.cmake,export.cmake,kernel.cmake,prebuild.cmake,c_check.cmake,os.cmake,arch.cmake,cc.cmake,fc.cmake"
+cmake,cmake,,"system.cmake,export.cmake,kernel.cmake,prebuild.cmake,c_check.cmake,os.cmake,arch.cmake,cc.cmake,fc.cmake"
 ctest,ctest,skip,
 driver,driver,skip,
 driver/level2,driver/level2,,"c,txt"

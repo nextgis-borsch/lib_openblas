@@ -2263,50 +2263,50 @@ set(ZSRC
 )
 
 set(SRCX
-  lapacke_cgbrfsx.c       lapacke_cporfsx.c       lapacke_dgerfsx.c       lapacke_sgbrfsx.c       lapacke_ssyrfsx.c       lapacke_zherfsx.c 
-  lapacke_cgbrfsx_work.c  lapacke_cporfsx_work.c  lapacke_dgerfsx_work.c  lapacke_sgbrfsx_work.c  lapacke_ssyrfsx_work.c  lapacke_zherfsx_work.c 
-  lapacke_cgerfsx.c       lapacke_csyrfsx.c       lapacke_dporfsx.c       lapacke_sgerfsx.c       lapacke_zgbrfsx.c       lapacke_zporfsx.c 
-  lapacke_cgerfsx_work.c  lapacke_csyrfsx_work.c  lapacke_dporfsx_work.c  lapacke_sgerfsx_work.c  lapacke_zgbrfsx_work.c  lapacke_zporfsx_work.c 
-  lapacke_cherfsx.c       lapacke_dgbrfsx.c       lapacke_dsyrfsx.c       lapacke_sporfsx.c       lapacke_zgerfsx.c       lapacke_zsyrfsx.c 
-  lapacke_cherfsx_work.c  lapacke_dgbrfsx_work.c  lapacke_dsyrfsx_work.c  lapacke_sporfsx_work.c  lapacke_zgerfsx_work.c  lapacke_zsyrfsx_work.c 
-  lapacke_cgbsvxx.c       lapacke_cposvxx.c       lapacke_dgesvxx.c       lapacke_sgbsvxx.c       lapacke_ssysvxx.c       lapacke_zhesvxx.c 
-  lapacke_cgbsvxx_work.c  lapacke_cposvxx_work.c  lapacke_dgesvxx_work.c  lapacke_sgbsvxx_work.c  lapacke_ssysvxx_work.c  lapacke_zhesvxx_work.c 
-  lapacke_cgesvxx.c       lapacke_csysvxx.c       lapacke_dposvxx.c       lapacke_sgesvxx.c       lapacke_zgbsvxx.c       lapacke_zposvxx.c 
-  lapacke_cgesvxx_work.c  lapacke_csysvxx_work.c  lapacke_dposvxx_work.c  lapacke_sgesvxx_work.c  lapacke_zgbsvxx_work.c  lapacke_zposvxx_work.c 
-  lapacke_chesvxx.c       lapacke_dgbsvxx.c       lapacke_dsysvxx.c       lapacke_sposvxx.c       lapacke_zgesvxx.c       lapacke_zsysvxx.c 
+  lapacke_cgbrfsx.c       lapacke_cporfsx.c       lapacke_dgerfsx.c       lapacke_sgbrfsx.c       lapacke_ssyrfsx.c       lapacke_zherfsx.c
+  lapacke_cgbrfsx_work.c  lapacke_cporfsx_work.c  lapacke_dgerfsx_work.c  lapacke_sgbrfsx_work.c  lapacke_ssyrfsx_work.c  lapacke_zherfsx_work.c
+  lapacke_cgerfsx.c       lapacke_csyrfsx.c       lapacke_dporfsx.c       lapacke_sgerfsx.c       lapacke_zgbrfsx.c       lapacke_zporfsx.c
+  lapacke_cgerfsx_work.c  lapacke_csyrfsx_work.c  lapacke_dporfsx_work.c  lapacke_sgerfsx_work.c  lapacke_zgbrfsx_work.c  lapacke_zporfsx_work.c
+  lapacke_cherfsx.c       lapacke_dgbrfsx.c       lapacke_dsyrfsx.c       lapacke_sporfsx.c       lapacke_zgerfsx.c       lapacke_zsyrfsx.c
+  lapacke_cherfsx_work.c  lapacke_dgbrfsx_work.c  lapacke_dsyrfsx_work.c  lapacke_sporfsx_work.c  lapacke_zgerfsx_work.c  lapacke_zsyrfsx_work.c
+  lapacke_cgbsvxx.c       lapacke_cposvxx.c       lapacke_dgesvxx.c       lapacke_sgbsvxx.c       lapacke_ssysvxx.c       lapacke_zhesvxx.c
+  lapacke_cgbsvxx_work.c  lapacke_cposvxx_work.c  lapacke_dgesvxx_work.c  lapacke_sgbsvxx_work.c  lapacke_ssysvxx_work.c  lapacke_zhesvxx_work.c
+  lapacke_cgesvxx.c       lapacke_csysvxx.c       lapacke_dposvxx.c       lapacke_sgesvxx.c       lapacke_zgbsvxx.c       lapacke_zposvxx.c
+  lapacke_cgesvxx_work.c  lapacke_csysvxx_work.c  lapacke_dposvxx_work.c  lapacke_sgesvxx_work.c  lapacke_zgbsvxx_work.c  lapacke_zposvxx_work.c
+  lapacke_chesvxx.c       lapacke_dgbsvxx.c       lapacke_dsysvxx.c       lapacke_sposvxx.c       lapacke_zgesvxx.c       lapacke_zsysvxx.c
   lapacke_chesvxx_work.c  lapacke_dgbsvxx_work.c  lapacke_dsysvxx_work.c  lapacke_sposvxx_work.c  lapacke_zgesvxx_work.c  lapacke_zsysvxx_work.c
 )
 
 
-# FILE PARTS OF TMGLIB 
+# FILE PARTS OF TMGLIB
 set(MATGEN
-  lapacke_clatms.c 
-  lapacke_clatms_work.c 
-  lapacke_dlatms.c 
-  lapacke_dlatms_work.c 
-  lapacke_slatms.c 
-  lapacke_slatms_work.c 
-  lapacke_zlatms.c 
-  lapacke_zlatms_work.c 
-  lapacke_clagge.c 
-  lapacke_clagge_work.c 
-  lapacke_dlagge.c 
-  lapacke_dlagge_work.c 
-  lapacke_slagge.c 
-  lapacke_slagge_work.c 
-  lapacke_zlagge.c 
-  lapacke_zlagge_work.c 
-  lapacke_claghe.c 
-  lapacke_claghe_work.c 
-  lapacke_zlaghe.c 
-  lapacke_zlaghe_work.c 
-  lapacke_clagsy.c 
-  lapacke_clagsy_work.c 
-  lapacke_dlagsy.c 
-  lapacke_dlagsy_work.c 
-  lapacke_slagsy.c 
-  lapacke_slagsy_work.c 
-  lapacke_zlagsy.c 
+  lapacke_clatms.c
+  lapacke_clatms_work.c
+  lapacke_dlatms.c
+  lapacke_dlatms_work.c
+  lapacke_slatms.c
+  lapacke_slatms_work.c
+  lapacke_zlatms.c
+  lapacke_zlatms_work.c
+  lapacke_clagge.c
+  lapacke_clagge_work.c
+  lapacke_dlagge.c
+  lapacke_dlagge_work.c
+  lapacke_slagge.c
+  lapacke_slagge_work.c
+  lapacke_zlagge.c
+  lapacke_zlagge_work.c
+  lapacke_claghe.c
+  lapacke_claghe_work.c
+  lapacke_zlaghe.c
+  lapacke_zlaghe_work.c
+  lapacke_clagsy.c
+  lapacke_clagsy_work.c
+  lapacke_dlagsy.c
+  lapacke_dlagsy_work.c
+  lapacke_slagsy.c
+  lapacke_slagsy_work.c
+  lapacke_zlagsy.c
   lapacke_zlagsy_work.c
 )
 
@@ -2394,3 +2394,7 @@ set(lapacke_include_dir "${NETLIB_LAPACK_DIR}/LAPACKE/include")
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy "${lapacke_include_dir}/lapacke_mangling_with_flags.h.in" "${lapacke_include_dir}/lapacke_mangling.h")
 include_directories(${lapacke_include_dir})
 set_source_files_properties(${LAPACKE_SOURCES} PROPERTIES COMPILE_FLAGS "${LAPACK_CFLAGS}")
+
+add_library(lapacke OBJECT ${LAPACKE_SOURCES})
+
+list(APPEND TARGET_OBJS "$<TARGET_OBJECTS:lapacke>")

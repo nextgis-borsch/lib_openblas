@@ -227,12 +227,12 @@ add_custom_target(genconfig ALL DEPENDS openblas_config.h)
 add_dependencies(genconfig ${OpenBLAS_LIBNAME})
 
 if(BUILD_SHARED_LIBS)
-    add_library(${LIB_NAME} SHARED ${LA_SOURCES} ${LAPACKE_SOURCES} ${TARGET_OBJS} ${OpenBLAS_DEF_FILE})
+    add_library(${LIB_NAME} SHARED ${TARGET_OBJS} ${OpenBLAS_DEF_FILE}) # ${LA_SOURCES} ${LAPACKE_SOURCES}
     if(MSVC)
         set_target_properties(${LIB_NAME} PROPERTIES IMPORT_SUFFIX "_i.lib")
     endif()
 elseif(OSX_FRAMEWORK)
-    add_library(${LIB_NAME} SHARED ${LA_SOURCES} ${LAPACKE_SOURCES} ${TARGET_OBJS} ${OpenBLAS_DEF_FILE} ${CMAKE_BINARY_DIR}/openblas_config.h)
+    add_library(${LIB_NAME} SHARED ${TARGET_OBJS} ${OpenBLAS_DEF_FILE} ${CMAKE_BINARY_DIR}/openblas_config.h) # ${LA_SOURCES} ${LAPACKE_SOURCES}
     set_target_properties(${LIB_NAME} PROPERTIES
       FRAMEWORK TRUE
       FRAMEWORK_VERSION ${FRAMEWORK_VERSION}
@@ -242,7 +242,7 @@ elseif(OSX_FRAMEWORK)
       XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
       PUBLIC_HEADER "${CMAKE_BINARY_DIR}/openblas_config.h")
 else()
-    add_library(${LIB_NAME} STATIC ${LA_SOURCES} ${LAPACKE_SOURCES} ${TARGET_OBJS} ${OpenBLAS_DEF_FILE})
+    add_library(${LIB_NAME} STATIC ${TARGET_OBJS} ${OpenBLAS_DEF_FILE}) # ${LA_SOURCES} ${LAPACKE_SOURCES}
     if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
         set( CMAKE_CXX_FLAGS "-fpic ${CMAKE_CXX_FLAGS}" )
         set( CMAKE_C_FLAGS   "-fpic ${CMAKE_C_FLAGS}" )
@@ -263,6 +263,10 @@ foreach (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
   set_target_properties( ${OpenBLAS_LIBNAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_BINARY_DIR}/lib/${OUTPUTCONFIG} )
   set_target_properties( ${OpenBLAS_LIBNAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_BINARY_DIR}/lib/${OUTPUTCONFIG} )
 endforeach()
+
+if(NOT NOFORTRAN AND NOT NO_LAPACK)
+    target_link_libraries(${OpenBLAS_LIBNAME} PRIVATE lapackw)
+endif()
 
 include("${PROJECT_SOURCE_DIR}/cmake/export.cmake")
 
