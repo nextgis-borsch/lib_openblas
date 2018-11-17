@@ -388,5 +388,8 @@ endforeach ()
 set_source_files_properties(${LA_SOURCES} PROPERTIES COMPILE_FLAGS "${LAPACK_FFLAGS}")
 
 add_library(lapackw STATIC ${LA_SOURCES})
+# 
+# set_target_properties(lapackw PROPERTIES LINK_FLAGS "-static -static-libgfortran -static-libgcc")
+# target_compile_options(lapackw "-static -static-libgfortran -static-libgcc")
 
 # list(APPEND TARGET_OBJS "$<TARGET_OBJECTS:lapackw>")
