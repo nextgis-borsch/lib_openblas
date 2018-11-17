@@ -124,16 +124,16 @@ include(system)
 
 set(BLASDIRS interface driver/level2 driver/level3 driver/others)
 
-if (NOT DYNAMIC_ARCH)
+if(NOT DYNAMIC_ARCH)
     list(APPEND BLASDIRS kernel)
 endif ()
 
-if (DEFINED SANITY_CHECK)
+if(DEFINED SANITY_CHECK)
     list(APPEND BLASDIRS reference)
 endif ()
 
 set(SUBDIRS	${BLASDIRS})
-if (NOT NO_LAPACK)
+if(NOT NO_LAPACK)
     list(APPEND SUBDIRS lapack)
 endif ()
 
@@ -144,7 +144,7 @@ if (NOT DEFINED BUILD_SINGLE AND NOT DEFINED BUILD_DOUBLE AND NOT DEFINED BUILD_
     set(BUILD_DOUBLE true)
     set(BUILD_COMPLEX true)
     set(BUILD_COMPLEX16 true)
-endif ()
+endif()
 
 set(FLOAT_TYPES "")
 if(BUILD_SINGLE)
@@ -155,25 +155,21 @@ endif()
 if (BUILD_DOUBLE)
     message(STATUS "Building Double Precision")
     list(APPEND FLOAT_TYPES "DOUBLE") # defines DOUBLE
-endif ()
+endif()
 
 if (BUILD_COMPLEX)
     message(STATUS "Building Complex Precision")
     list(APPEND FLOAT_TYPES "COMPLEX") # defines COMPLEX
-endif ()
+endif()
 
 if (BUILD_COMPLEX16)
     message(STATUS "Building Double Complex Precision")
     list(APPEND FLOAT_TYPES "ZCOMPLEX") # defines COMPLEX and DOUBLE
-endif ()
+endif()
 
 # libs :
 if (NOT DEFINED CORE OR "${CORE}" STREQUAL "UNKNOWN")
     message(FATAL_ERROR "Detecting CPU failed. Please set TARGET explicitly, e.g. make TARGET=your_cpu_target. Please read README for details.")
-endif ()
-
-if (${NO_STATIC} AND ${NO_SHARED})
-    message(FATAL_ERROR "Neither static nor shared are enabled.")
 endif ()
 
 #Set default output directory
@@ -195,12 +191,12 @@ endforeach ()
 
 # Can't just use lapack-netlib's CMake files, since they are set up to search for BLAS, build and install a binary. We just want to build a couple of lib files out of lapack and lapacke.
 # Not using add_subdirectory here because lapack-netlib already has its own CMakeLists.txt. Instead include a cmake script with the sources we want.
-if (NOT NOFORTRAN AND NOT NO_LAPACK)
+if(NOT NOFORTRAN AND NOT NO_LAPACK)
     include("${PROJECT_SOURCE_DIR}/cmake/lapack.cmake")
-    if (NOT NO_LAPACKE)
+    if(NOT NO_LAPACKE)
         include("${PROJECT_SOURCE_DIR}/cmake/lapacke.cmake")
-    endif ()
-endif ()
+    endif()
+endif()
 
 # Only generate .def for dll on MSVC and always produce pdb files for debug and release
 if(MSVC)
@@ -216,7 +212,7 @@ enable_testing()
 add_subdirectory(utest)
 
 # Install include files
-set (GENCONFIG_BIN ${CMAKE_BINARY_DIR}/gen_config_h${CMAKE_EXECUTABLE_SUFFIX})
+set(GENCONFIG_BIN ${CMAKE_BINARY_DIR}/gen_config_h${CMAKE_EXECUTABLE_SUFFIX})
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/openblas_config.h
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/config.h
