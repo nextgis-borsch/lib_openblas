@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function zupmtr
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -49,16 +48,18 @@ lapack_int LAPACKE_zupmtr( int matrix_layout, char side, char uplo, char trans,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    r = LAPACKE_lsame( side, 'l' ) ? m : n;
-    if( LAPACKE_zpp_nancheck( r, ap ) ) {
-        return -7;
-    }
-    if( LAPACKE_zge_nancheck( matrix_layout, m, n, c, ldc ) ) {
-        return -9;
-    }
-    if( LAPACKE_z_nancheck( m-1, tau, 1 ) ) {
-        return -8;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        r = LAPACKE_lsame( side, 'l' ) ? m : n;
+        if( LAPACKE_zpp_nancheck( r, ap ) ) {
+            return -7;
+        }
+        if( LAPACKE_zge_nancheck( matrix_layout, m, n, c, ldc ) ) {
+            return -9;
+        }
+        if( LAPACKE_z_nancheck( r-1, tau, 1 ) ) {
+            return -8;
+        }
     }
 #endif
     /* Additional scalars initializations for work arrays */

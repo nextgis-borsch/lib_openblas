@@ -1,9 +1,9 @@
 ################################################################################
 # Project:  OpenBLAS
 # Purpose:  CMake build scripts
-# Author:   dmitry.baryshnikov@nextgis.com
+# Author:   NextGIS
 ################################################################################
-# Copyright (C) 2018, NextGIS <info@nextgis.com>
+# Copyright (C) 2022, NextGIS <info@nextgis.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -24,9 +24,9 @@
 # DEALINGS IN THE SOFTWARE.
 ################################################################################
 
-cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8.5)
 
-project(openblas CXX C ASM Fortran)
+project(openblas C ASM)
 
 if(NOT DEFINED PACKAGE_VENDOR)
     set(PACKAGE_VENDOR NextGIS)
@@ -83,188 +83,339 @@ report_version(${PROJECT_NAME} ${VERSION})
 set(OpenBLAS_LIBNAME ${PROJECT_NAME})
 set(LIB_NAME ${OpenBLAS_LIBNAME})
 
-cmake_policy(SET CMP0040 OLD)
-cmake_policy(SET CMP0054 NEW)
+set(OpenBLAS_VERSION "${OpenBLAS_MAJOR_VERSION}.${OpenBLAS_MINOR_VERSION}.${OpenBLAS_PATCH_VERSION}")
+
+include(CMakePackageConfigHelpers)
 
 #######
-if(MSVC)
-    option(BUILD_WITHOUT_LAPACK "Without LAPACK and LAPACKE (Only BLAS or CBLAS)" ON)
+option(BUILD_WITHOUT_LAPACK "Do not build LAPACK and LAPACKE (Only BLAS or CBLAS)" OFF)
+
+option(BUILD_TESTING "Build LAPACK testsuite when building LAPACK" ON)
+
+option(C_LAPACK "Build LAPACK from C sources instead of the original Fortran" OFF)
+
+option(BUILD_WITHOUT_CBLAS "Do not build the C interface (CBLAS) to the BLAS functions" OFF)
+
+option(DYNAMIC_ARCH "Include support for multiple CPU targets, with automatic selection at runtime (x86/x86_64, aarch64 or ppc only)" OFF)
+
+option(DYNAMIC_OLDER "Include specific support for older x86 cpu models (Penryn,Dunnington,Atom,Nano,Opteron) with DYNAMIC_ARCH" OFF)
+
+option(BUILD_RELAPACK "Build with ReLAPACK (recursive implementation of several LAPACK functions on top of standard LAPACK)" OFF)
+
+option(USE_LOCKING "Use locks even in single-threaded builds to make them callable from multiple threads" OFF)
+
+option(USE_PERL "Use the older PERL scripts for build preparation instead of universal shell scripts" OFF)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  option(NO_AFFINITY "Disable support for CPU affinity masks to avoid binding processes from e.g. R or numpy/scipy to a single core" ON)
+else()
+  set(NO_AFFINITY 1)
 endif()
-option(BUILD_WITHOUT_CBLAS "Without CBLAS" OFF)
-option(BUILD_DEBUG "Build Debug Version" OFF)
+
+option(CPP_THREAD_SAFETY_TEST "Run a massively parallel DGEMM test to confirm thread safety of the library (requires OpenMP and about 1.3GB of RAM)" OFF)
+
+option(CPP_THREAD_SAFETY_GEMV "Run a massively parallel DGEMV test to confirm thread safety of the library (requires OpenMP)" OFF)
+option(BUILD_STATIC_LIBS "Build static library" OFF)
+if(NOT BUILD_STATIC_LIBS AND NOT BUILD_SHARED_LIBS)
+  set(BUILD_STATIC_LIBS ON CACHE BOOL "Build static library" FORCE)
+endif()
+if((BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS) AND MSVC)
+  message(WARNING "Could not enable both BUILD_STATIC_LIBS and BUILD_SHARED_LIBS with MSVC, Disable BUILD_SHARED_LIBS")
+  set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static library" FORCE)
+endif()
+
+# Add a prefix or suffix to all exported symbol names in the shared library.
+# Avoids conflicts with other BLAS libraries, especially when using
+# 64 bit integer interfaces in OpenBLAS.
+set(SYMBOLPREFIX "" CACHE STRING  "Add a prefix to all exported symbol names in the shared library to avoid conflicts with other BLAS libraries" )
+
+set(SYMBOLSUFFIX "" CACHE STRING  "Add a suffix to all exported symbol names in the shared library, e.g. _64 for INTERFACE64 builds" )
+
 #######
 if(BUILD_WITHOUT_LAPACK)
-    set(NO_LAPACK 1)
-    set(NO_LAPACKE 1)
-endif()
-
-if(CMAKE_CONFIGURATION_TYPES) # multiconfig generator?
-    set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
-    set(CMAKE_BUILD_TYPE
-        Debug Debug
-	Release Release
-	)
-else()
-	if( NOT CMAKE_BUILD_TYPE )
-		if(BUILD_DEBUG)
-			set(CMAKE_BUILD_TYPE Debug)
-		else()
-			set(CMAKE_BUILD_TYPE Release)
-		endif()
-	endif()
+  set(NO_LAPACK 1)
+  set(NO_LAPACKE 1)
 endif()
 
 if(BUILD_WITHOUT_CBLAS)
-    set(NO_CBLAS 1)
+  set(NO_CBLAS 1)
 endif()
 
 #######
 
-include(system)
+if(MSVC AND MSVC_STATIC_CRT)
+  set(CompilerFlags
+        CMAKE_CXX_FLAGS
+        CMAKE_CXX_FLAGS_DEBUG
+        CMAKE_CXX_FLAGS_RELEASE
+        CMAKE_C_FLAGS
+        CMAKE_C_FLAGS_DEBUG
+        CMAKE_C_FLAGS_RELEASE
+        )
+  foreach(CompilerFlag ${CompilerFlags})
+    string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
+  endforeach()
+endif()
+
+message(WARNING "CMake support is experimental. It does not yet support all build options and may not produce the same Makefiles that OpenBLAS ships with.")
+
+include("${PROJECT_SOURCE_DIR}/cmake/utils.cmake")
+include("${PROJECT_SOURCE_DIR}/cmake/system.cmake")
 
 set(BLASDIRS interface driver/level2 driver/level3 driver/others)
 
-if(NOT DYNAMIC_ARCH)
-    list(APPEND BLASDIRS kernel)
+if (NOT DYNAMIC_ARCH)
+  list(APPEND BLASDIRS kernel)
 endif ()
 
-if(DEFINED SANITY_CHECK)
-    list(APPEND BLASDIRS reference)
+if (DEFINED SANITY_CHECK)
+  list(APPEND BLASDIRS reference)
 endif ()
 
 set(SUBDIRS	${BLASDIRS})
-if(NOT NO_LAPACK)
-    list(APPEND SUBDIRS lapack)
+if (NOT NO_LAPACK)
+  if(BUILD_RELAPACK)
+    list(APPEND SUBDIRS relapack/src)
+  endif()
+  list(APPEND SUBDIRS lapack)
 endif ()
 
+if (NOT DEFINED BUILD_BFLOAT16)
+ set (BUILD_BFLOAT16 false)
+endif ()
 # set which float types we want to build for
 if (NOT DEFINED BUILD_SINGLE AND NOT DEFINED BUILD_DOUBLE AND NOT DEFINED BUILD_COMPLEX AND NOT DEFINED BUILD_COMPLEX16)
-    # if none are defined, build for all
-    set(BUILD_SINGLE true)
-    set(BUILD_DOUBLE true)
-    set(BUILD_COMPLEX true)
-    set(BUILD_COMPLEX16 true)
+  # if none are defined, build for all
+  # set(BUILD_BFLOAT16 true)
+  set(BUILD_SINGLE true)
+  set(BUILD_DOUBLE true)
+  set(BUILD_COMPLEX true)
+  set(BUILD_COMPLEX16 true)
+endif ()
+
+if (NOT DEFINED BUILD_MATGEN)
+  set(BUILD_MATGEN true)
 endif()
 
 set(FLOAT_TYPES "")
-if(BUILD_SINGLE)
-    message(STATUS "Building Single Precision")
-    list(APPEND FLOAT_TYPES "SINGLE") # defines nothing
-endif()
+if (BUILD_SINGLE)
+  message(STATUS "Building Single Precision")
+  list(APPEND FLOAT_TYPES "SINGLE") # defines nothing
+endif ()
 
 if (BUILD_DOUBLE)
-    message(STATUS "Building Double Precision")
-    list(APPEND FLOAT_TYPES "DOUBLE") # defines DOUBLE
-endif()
+  message(STATUS "Building Double Precision")
+  list(APPEND FLOAT_TYPES "DOUBLE") # defines DOUBLE
+endif ()
 
 if (BUILD_COMPLEX)
-    message(STATUS "Building Complex Precision")
-    list(APPEND FLOAT_TYPES "COMPLEX") # defines COMPLEX
-endif()
+  message(STATUS "Building Complex Precision")
+  list(APPEND FLOAT_TYPES "COMPLEX") # defines COMPLEX
+endif ()
 
 if (BUILD_COMPLEX16)
-    message(STATUS "Building Double Complex Precision")
-    list(APPEND FLOAT_TYPES "ZCOMPLEX") # defines COMPLEX and DOUBLE
-endif()
+  message(STATUS "Building Double Complex Precision")
+  list(APPEND FLOAT_TYPES "ZCOMPLEX") # defines COMPLEX and DOUBLE
+endif ()
 
-# libs :
+if (BUILD_BFLOAT16)
+  message(STATUS "Building Half Precision")
+  #  list(APPEND FLOAT_TYPES "BFLOAT16") # defines nothing
+endif ()
+
 if (NOT DEFINED CORE OR "${CORE}" STREQUAL "UNKNOWN")
-    message(FATAL_ERROR "Detecting CPU failed. Please set TARGET explicitly, e.g. make TARGET=your_cpu_target. Please read README for details.")
+  message(FATAL_ERROR "Detecting CPU failed. Please set TARGET explicitly, e.g. make TARGET=your_cpu_target. Please read README for details.")
 endif ()
 
 #Set default output directory
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 if(MSVC)
-    set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/lib/Debug)
-    set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/lib/Release)
+  set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/lib/Debug)
+  set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/lib/Release)
 endif ()
+
 # get obj vars into format that add_library likes: $<TARGET_OBJS:objlib> (see http://www.cmake.org/cmake/help/v3.0/command/add_library.html)
 set(TARGET_OBJS "")
 foreach (SUBDIR ${SUBDIRS})
-    add_subdirectory(${SUBDIR})
-    string(REPLACE "/" "_" subdir_obj ${SUBDIR})
-    list(APPEND TARGET_OBJS "$<TARGET_OBJECTS:${subdir_obj}>")
+  add_subdirectory(${SUBDIR})
+  string(REPLACE "/" "_" subdir_obj ${SUBDIR})
+  list(APPEND TARGET_OBJS "$<TARGET_OBJECTS:${subdir_obj}>")
 endforeach ()
 
 # netlib:
 
 # Can't just use lapack-netlib's CMake files, since they are set up to search for BLAS, build and install a binary. We just want to build a couple of lib files out of lapack and lapacke.
 # Not using add_subdirectory here because lapack-netlib already has its own CMakeLists.txt. Instead include a cmake script with the sources we want.
-if(NOT NOFORTRAN AND NOT NO_LAPACK)
-    include("${PROJECT_SOURCE_DIR}/cmake/lapack.cmake")
-    if(NOT NO_LAPACKE)
-        include("${PROJECT_SOURCE_DIR}/cmake/lapacke.cmake")
-    endif()
-endif()
+if (NOT NO_LAPACK)
+  include("${PROJECT_SOURCE_DIR}/cmake/lapack.cmake")
+  if (NOT NO_LAPACKE)
+    include("${PROJECT_SOURCE_DIR}/cmake/lapacke.cmake")
+  endif ()
+endif ()
 
 # Only generate .def for dll on MSVC and always produce pdb files for debug and release
 if(MSVC)
+  if (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_LESS 3.4)
     set(OpenBLAS_DEF_FILE "${PROJECT_BINARY_DIR}/openblas.def")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /Zi")
-    set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
+  endif()
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /Zi")
+  set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
 endif()
 
-include("${PROJECT_SOURCE_DIR}/cmake/export.cmake")
+if (${DYNAMIC_ARCH})
+  add_subdirectory(kernel)
+  foreach(TARGET_CORE ${DYNAMIC_CORE})
+    message("${TARGET_CORE}")
+    list(APPEND TARGET_OBJS "$<TARGET_OBJECTS:kernel_${TARGET_CORE}>")
+  endforeach()
+endif ()
 
-enable_testing()
-add_subdirectory(utest)
-
-# Install include files
-set(GENCONFIG_BIN ${CMAKE_BINARY_DIR}/gen_config_h${CMAKE_EXECUTABLE_SUFFIX})
-add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/openblas_config.h
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/config.h
-    COMMAND ${GENCONFIG_BIN} ${CMAKE_CURRENT_SOURCE_DIR}/config.h ${CMAKE_CURRENT_SOURCE_DIR}/openblas_config_template.h > ${CMAKE_BINARY_DIR}/openblas_config.h
-)
-
-add_custom_target(genconfig ALL DEPENDS openblas_config.h)
-add_dependencies(genconfig ${OpenBLAS_LIBNAME})
-
+# add objects to the openblas lib
+if(NOT NO_LAPACK)
+  add_library(LAPACK_OVERRIDES OBJECT ${LA_SOURCES})
+  list(APPEND TARGET_OBJS "$<TARGET_OBJECTS:LAPACK_OVERRIDES>")
+endif()
+if(NOT NO_LAPACKE)
+  add_library(LAPACKE OBJECT ${LAPACKE_SOURCES})
+  list(APPEND TARGET_OBJS "$<TARGET_OBJECTS:LAPACKE>")
+endif()
+if(BUILD_RELAPACK)
+  add_library(RELAPACK OBJECT ${RELA_SOURCES})
+  list(APPEND TARGET_OBJS "$<TARGET_OBJECTS:RELAPACK>")
+endif()
+if(BUILD_STATIC_LIBS)
+  add_library(${LIB_NAME} STATIC ${TARGET_OBJS} ${OpenBLAS_DEF_FILE})
+  target_include_directories(${LIB_NAME} INTERFACE $<INSTALL_INTERFACE:include/openblas${SUFFIX64}>)
+endif()
 if(BUILD_SHARED_LIBS)
-    add_library(${LIB_NAME} SHARED ${TARGET_OBJS} ${OpenBLAS_DEF_FILE}) # ${LA_SOURCES} ${LAPACKE_SOURCES}
-    if(MSVC)
-        set_target_properties(${LIB_NAME} PROPERTIES IMPORT_SUFFIX "_i.lib")
-    endif()
-elseif(OSX_FRAMEWORK)
-    add_library(${LIB_NAME} SHARED ${TARGET_OBJS} ${OpenBLAS_DEF_FILE} ${CMAKE_BINARY_DIR}/openblas_config.h) # ${LA_SOURCES} ${LAPACKE_SOURCES}
+  add_library(${LIB_NAME} SHARED ${TARGET_OBJS} ${OpenBLAS_DEF_FILE})
+  target_include_directories(${LIB_NAME} INTERFACE $<INSTALL_INTERFACE:include/openblas${SUFFIX64}>)
+endif()
+
+set_target_properties(${LIB_NAME} PROPERTIES OUTPUT_NAME ${OpenBLAS_LIBNAME})
+
+# Handle MSVC exports
+if(MSVC AND BUILD_SHARED_LIBS)
+  if (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_LESS 3.4)
+    include("${PROJECT_SOURCE_DIR}/cmake/export.cmake")
+  else()
+    # Creates verbose .def file (51KB vs 18KB)
+    set_target_properties(${LIB_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS true)
+  endif()
+endif()
+
+if (USE_THREAD)
+  # Add threading library to linker
+  find_package(Threads)
+  if (THREADS_HAVE_PTHREAD_ARG)
     set_target_properties(${LIB_NAME} PROPERTIES
-      FRAMEWORK TRUE
-      FRAMEWORK_VERSION ${FRAMEWORK_VERSION}
-      MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${VERSION}
-      MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION}
-      MACOSX_FRAMEWORK_IDENTIFIER org.openblas.openblas
-      XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
-      PUBLIC_HEADER "${CMAKE_BINARY_DIR}/openblas_config.h")
-else()
-    add_library(${LIB_NAME} STATIC ${TARGET_OBJS} ${OpenBLAS_DEF_FILE}) # ${LA_SOURCES} ${LAPACKE_SOURCES}
-    if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-        set( CMAKE_CXX_FLAGS "-fpic ${CMAKE_CXX_FLAGS}" )
-        set( CMAKE_C_FLAGS   "-fpic ${CMAKE_C_FLAGS}" )
+      COMPILE_OPTIONS "-pthread"
+      INTERFACE_COMPILE_OPTIONS "-pthread"
+    )
+  endif()
+  if(BUILD_STATIC_LIBS)
+    target_link_libraries(${LIB_NAME} ${CMAKE_THREAD_LIBS_INIT})
+  endif()
+  if(BUILD_SHARED_LIBS)
+    target_link_libraries(${LIB_NAME} ${CMAKE_THREAD_LIBS_INIT})
+  endif()
+endif()
+
+if(BUILD_TESTING)
+    enable_testing()
+    #if (MSVC OR NOT NOFORTRAN)
+    if (NOT NO_CBLAS)
+      # Broken without fortran on unix
+      add_subdirectory(utest)
     endif()
+
+    if (NOT NOFORTRAN)
+      # Build test and ctest
+      add_subdirectory(test)
+      if (BUILD_TESTING)
+        add_subdirectory(lapack-netlib/TESTING)
+      endif()
+    endif()
+  if(NOT NO_CBLAS)
+    add_subdirectory(ctest)
+  endif()
+  if (CPP_THREAD_SAFETY_TEST OR CPP_THREAD_SAFETY_GEMV)
+    add_subdirectory(cpp_thread_test)
+  endif()
 endif()
 
 set_target_properties(${LIB_NAME} PROPERTIES
-    VERSION ${OpenBLAS_MAJOR_VERSION}.${OpenBLAS_MINOR_VERSION}
-    SOVERSION ${OpenBLAS_MAJOR_VERSION}
-    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
-    LIBRARY_OUTPUT_NAME_DEBUG "${OpenBLAS_LIBNAME}_d"
+  VERSION ${OpenBLAS_MAJOR_VERSION}.${OpenBLAS_MINOR_VERSION}
+  SOVERSION ${OpenBLAS_MAJOR_VERSION}
 )
 
-foreach (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
-  string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
-
-  set_target_properties( ${OpenBLAS_LIBNAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_BINARY_DIR}/lib/${OUTPUTCONFIG} )
-  set_target_properties( ${OpenBLAS_LIBNAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_BINARY_DIR}/lib/${OUTPUTCONFIG} )
-  set_target_properties( ${OpenBLAS_LIBNAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_BINARY_DIR}/lib/${OUTPUTCONFIG} )
-endforeach()
-
-if(NOT NOFORTRAN AND NOT NO_LAPACK)
-    target_link_libraries(${OpenBLAS_LIBNAME} PRIVATE lapackw)
+if (BUILD_SHARED_LIBS AND BUILD_RELAPACK)
+  if (NOT MSVC)
+    target_link_libraries(${LIB_NAME} "-Wl,-allow-multiple-definition")
+  else()
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /FORCE:MULTIPLE")
+  endif()
 endif()
 
-include("${PROJECT_SOURCE_DIR}/cmake/export.cmake")
+if (BUILD_SHARED_LIBS AND NOT ${SYMBOLPREFIX}${SYMBOLSUFFIX} STREQUAL "")
+  if (NOT DEFINED ARCH)
+    set(ARCH_IN "x86_64")
+  else()
+    set(ARCH_IN ${ARCH})
+  endif()
+
+  if (${CORE} STREQUAL "generic")
+    set(ARCH_IN "GENERIC")
+  endif ()
+
+  if (NOT DEFINED EXPRECISION)
+    set(EXPRECISION_IN 0)
+  else()
+    set(EXPRECISION_IN ${EXPRECISION})
+  endif()
+
+  if (NOT DEFINED NO_CBLAS)
+    set(NO_CBLAS_IN 0)
+  else()
+    set(NO_CBLAS_IN ${NO_CBLAS})
+  endif()
+
+  if (NOT DEFINED NO_LAPACK)
+    set(NO_LAPACK_IN 0)
+  else()
+    set(NO_LAPACK_IN ${NO_LAPACK})
+  endif()
+
+  if (NOT DEFINED NO_LAPACKE)
+    set(NO_LAPACKE_IN 0)
+  else()
+    set(NO_LAPACKE_IN ${NO_LAPACKE})
+  endif()
+
+  if (NOT DEFINED NEED2UNDERSCORES)
+    set(NEED2UNDERSCORES_IN 0)
+  else()
+    set(NEED2UNDERSCORES_IN ${NEED2UNDERSCORES})
+  endif()
+
+  if (NOT DEFINED ONLY_CBLAS)
+    set(ONLY_CBLAS_IN 0)
+  else()
+    set(ONLY_CBLAS_IN ${ONLY_CBLAS})
+  endif()
+
+  if (NOT DEFINED BU)
+    set(BU _)
+  endif()
+
+  if (NOT ${SYMBOLPREFIX} STREQUAL "")
+    message(STATUS "adding prefix ${SYMBOLPREFIX} to names of exported symbols in ${OpenBLAS_LIBNAME}")
+  endif()
+  if (NOT ${SYMBOLSUFFIX} STREQUAL "")
+    message(STATUS "adding suffix ${SYMBOLSUFFIX} to names of exported symbols in ${OpenBLAS_LIBNAME}")
+  endif()
+endif()
 
 set(PACKAGE_NAME ${PROJECT_NAME})
 string(TOUPPER ${PACKAGE_NAME} PACKAGE_UPPER_NAME)
@@ -281,39 +432,79 @@ if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )
 endif()
 
 if(NOT SKIP_INSTALL_HEADERS AND NOT SKIP_INSTALL_ALL)
-    install(FILES ${CMAKE_BINARY_DIR}/openblas_config.h DESTINATION ${INSTALL_INC_DIR})
+    # Install headers
+    set(CMAKE_INSTALL_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR}/openblas${SUFFIX64})
+    set(CMAKE_INSTALL_FULL_INCLUDEDIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR})
 
-    file(READ ${CMAKE_CURRENT_SOURCE_DIR}/common_interface.h _COMMON_INTERFACE_H_CONTENTS)
-    file(WRITE ${CMAKE_BINARY_DIR}/f77blas.h "#ifndef OPENBLAS_F77BLAS_H
-#define OPENBLAS_F77BLAS_H
-#include \"openblas_config.h\"
-${_COMMON_INTERFACE_H_CONTENTS}
-#endif
-")
-	install (FILES ${CMAKE_BINARY_DIR}/f77blas.h DESTINATION ${INSTALL_INC_DIR})
+    message(STATUS "Generating openblas_config.h in ${CMAKE_INSTALL_INCLUDEDIR}")
+
+    set(OPENBLAS_CONFIG_H ${CMAKE_BINARY_DIR}/openblas_config.h)
+    file(WRITE  ${OPENBLAS_CONFIG_H} "#ifndef OPENBLAS_CONFIG_H\n")
+    file(APPEND ${OPENBLAS_CONFIG_H} "#define OPENBLAS_CONFIG_H\n")
+    file(STRINGS ${PROJECT_BINARY_DIR}/config.h __lines)
+    foreach(line ${__lines})
+      string(REPLACE "#define " "" line ${line})
+      file(APPEND ${OPENBLAS_CONFIG_H} "#define OPENBLAS_${line}\n")
+    endforeach()
+    file(APPEND ${OPENBLAS_CONFIG_H} "#define OPENBLAS_VERSION \"OpenBLAS ${OpenBLAS_VERSION}\"\n")
+    file(READ   ${CMAKE_CURRENT_SOURCE_DIR}/openblas_config_template.h OPENBLAS_CONFIG_TEMPLATE_H_CONTENTS)
+    file(APPEND ${OPENBLAS_CONFIG_H} "${OPENBLAS_CONFIG_TEMPLATE_H_CONTENTS}\n")
+    file(APPEND ${OPENBLAS_CONFIG_H} "#endif /* OPENBLAS_CONFIG_H */\n")
+    install(FILES ${OPENBLAS_CONFIG_H} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+    if(NOT NOFORTRAN)
+      message(STATUS "Generating f77blas.h in ${CMAKE_INSTALL_INCLUDEDIR}")
+
+      set(F77BLAS_H ${CMAKE_BINARY_DIR}/generated/f77blas.h)
+      file(WRITE  ${F77BLAS_H} "#ifndef OPENBLAS_F77BLAS_H\n")
+      file(APPEND ${F77BLAS_H} "#define OPENBLAS_F77BLAS_H\n")
+      file(APPEND ${F77BLAS_H} "#include \"openblas_config.h\"\n")
+      file(READ ${CMAKE_CURRENT_SOURCE_DIR}/common_interface.h COMMON_INTERFACE_H_CONTENTS)
+      file(APPEND ${F77BLAS_H} "${COMMON_INTERFACE_H_CONTENTS}\n")
+      file(APPEND ${F77BLAS_H} "#endif")
+      install(FILES ${F77BLAS_H} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    endif()
 
     if(NOT NO_CBLAS)
-        file(READ ${CMAKE_CURRENT_SOURCE_DIR}/cblas.h _CBLAS_H_CONTENTS)
-        string(REPLACE "common.h" "openblas_config.h" _CBLAS_H_CONTENTS ${_CBLAS_H_CONTENTS})
-        file(WRITE ${CMAKE_BINARY_DIR}/cblas.h "${_CBLAS_H_CONTENTS}")
-    	install(FILES ${CMAKE_BINARY_DIR}/cblas.h DESTINATION ${INSTALL_INC_DIR})
+      message (STATUS "Generating cblas.h in ${CMAKE_INSTALL_INCLUDEDIR}")
+      set(CBLAS_H ${CMAKE_BINARY_DIR}/generated/cblas.h)
+      file(READ ${CMAKE_CURRENT_SOURCE_DIR}/cblas.h CBLAS_H_CONTENTS)
+      string(REPLACE "common" "openblas_config" CBLAS_H_CONTENTS_NEW "${CBLAS_H_CONTENTS}")
+      if (NOT ${SYMBOLPREFIX} STREQUAL "")
+        string(REPLACE " cblas" " ${SYMBOLPREFIX}cblas" CBLAS_H_CONTENTS	"${CBLAS_H_CONTENTS_NEW}")
+        string(REPLACE " openblas" " ${SYMBOLPREFIX}openblas" CBLAS_H_CONTENTS_NEW	"${CBLAS_H_CONTENTS}")
+        string (REPLACE " ${SYMBOLPREFIX}openblas_complex" " openblas_complex" CBLAS_H_CONTENTS	"${CBLAS_H_CONTENTS_NEW}")
+        string(REPLACE " goto" " ${SYMBOLPREFIX}goto" CBLAS_H_CONTENTS_NEW "${CBLAS_H_CONTENTS}")
+      endif()
+      if (NOT ${SYMBOLSUFFIX} STREQUAL "")
+        string(REGEX REPLACE "(cblas[^ (]*)" "\\1${SYMBOLSUFFIX}" CBLAS_H_CONTENTS	"${CBLAS_H_CONTENTS_NEW}")
+        string(REGEX REPLACE "(openblas[^ (]*)" "\\1${SYMBOLSUFFIX}" CBLAS_H_CONTENTS_NEW "${CBLAS_H_CONTENTS}")
+        string(REGEX REPLACE "(openblas_complex[^ ]*)${SYMBOLSUFFIX}" "\\1" CBLAS_H_CONTENTS	"${CBLAS_H_CONTENTS_NEW}")
+        string(REGEX REPLACE "(goto[^ (]*)" "\\1${SYMBOLSUFFIX}" CBLAS_H_CONTENTS_NEW	"${CBLAS_H_CONTENTS}")
+      endif()
+      file(WRITE ${CBLAS_H} "${CBLAS_H_CONTENTS_NEW}")
+      install(FILES ${CBLAS_H} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
     endif()
-
+    
     if(NOT NO_LAPACKE)
-    	file(GLOB_RECURSE INCLUDE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/lapack-netlib/LAPACKE/*.h")
-    	install(FILES ${INCLUDE_FILES} DESTINATION ${INSTALL_INC_DIR})
+      message (STATUS "Copying LAPACKE header files to ${CMAKE_INSTALL_INCLUDEDIR}")
+      add_dependencies( ${LIB_NAME} genlapacke)
+      FILE(GLOB_RECURSE INCLUDE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/lapack-netlib/LAPACKE/*.h")
+      install (FILES ${INCLUDE_FILES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-    	configure_file(
-            ${CMAKE_CURRENT_SOURCE_DIR}/lapack-netlib/LAPACKE/include/lapacke_mangling_with_flags.h.in
-            "${CMAKE_BINARY_DIR}/lapacke_mangling.h"
-        	COPYONLY)
-    	install(FILES ${CMAKE_BINARY_DIR}/lapacke_mangling.h DESTINATION ${INSTALL_INC_DIR})
+      ADD_CUSTOM_TARGET(genlapacke
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/lapack-netlib/LAPACKE/include/lapacke_mangling_with_flags.h.in "${CMAKE_BINARY_DIR}/lapacke_mangling.h"
+      )
+      install (FILES ${CMAKE_BINARY_DIR}/lapacke_mangling.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/openblas${SUFFIX64})
     endif()
+    
+    # Install pkg-config files
+    configure_file(${PROJECT_SOURCE_DIR}/cmake/openblas.pc.in ${PROJECT_BINARY_DIR}/openblas${SUFFIX64}.pc @ONLY)
+    install (FILES ${PROJECT_BINARY_DIR}/openblas${SUFFIX64}.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig/)
 endif()
 
 # Uninstall
 add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
-
 
 # Export package ===============================================================
 

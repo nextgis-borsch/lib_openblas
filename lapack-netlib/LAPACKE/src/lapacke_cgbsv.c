@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function cgbsv
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -44,12 +43,14 @@ lapack_int LAPACKE_cgbsv( int matrix_layout, lapack_int n, lapack_int kl,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_cgb_nancheck( matrix_layout, n, n, kl, kl+ku, ab, ldab ) ) {
-        return -6;
-    }
-    if( LAPACKE_cge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
-        return -9;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_cgb_nancheck( matrix_layout, n, n, kl, kl+ku, ab, ldab ) ) {
+            return -6;
+        }
+        if( LAPACKE_cge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
+            return -9;
+        }
     }
 #endif
     return LAPACKE_cgbsv_work( matrix_layout, n, kl, ku, nrhs, ab, ldab, ipiv, b,

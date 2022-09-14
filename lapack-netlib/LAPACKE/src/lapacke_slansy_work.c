@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native middle-level C interface to LAPACK function slansy
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -38,7 +37,7 @@ float LAPACKE_slansy_work( int matrix_layout, char norm, char uplo,
                                 float* work )
 {
     lapack_int info = 0;
-	float res = 0.;
+    float res = 0.;
     if( matrix_layout == LAPACK_COL_MAJOR ) {
         /* Call LAPACK function and adjust info */
         res = LAPACK_slansy( &norm, &uplo, &n, a, &lda, work );

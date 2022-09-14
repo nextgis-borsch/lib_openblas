@@ -28,7 +28,6 @@
 ******************************************************************************
 * Contents: Native high-level C interface to LAPACK function zlacn2
 * Author: Intel Corporation
-* Generated October, 2012
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -38,12 +37,14 @@ lapack_int LAPACKE_zlacn2( lapack_int n, lapack_complex_double* v,
                            double* est, lapack_int* kase, lapack_int* isave )
 {
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_d_nancheck( 1, est, 1 ) ) {
-        return -5;
-    }
-    if( LAPACKE_z_nancheck( n, x, 1 ) ) {
-        return -3;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_d_nancheck( 1, est, 1 ) ) {
+            return -5;
+        }
+        if( LAPACKE_z_nancheck( n, x, 1 ) ) {
+            return -3;
+        }
     }
 #endif
     return LAPACKE_zlacn2_work( n, v, x, est, kase, isave );

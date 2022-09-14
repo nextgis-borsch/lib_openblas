@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native middle-level C interface to LAPACK function sormlq
 * Author: Intel Corporation
-* Generated June 2016
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -51,8 +50,8 @@ lapack_int LAPACKE_sormlq_work( int matrix_layout, char side, char trans,
         lapack_int r = LAPACKE_lsame( side, 'l' ) ? m : n;
         lapack_int lda_t = MAX(1,k);
         lapack_int ldc_t = MAX(1,m);
-	float *a_t = NULL;
-	float *c_t = NULL;
+        float *a_t = NULL;
+        float *c_t = NULL;
         /* Check leading dimension(s) */
         if( lda < r ) {
             info = -8;

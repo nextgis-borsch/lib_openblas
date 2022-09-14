@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function stgsen
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -53,21 +52,23 @@ lapack_int LAPACKE_stgsen( int matrix_layout, lapack_int ijob,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_sge_nancheck( matrix_layout, n, n, a, lda ) ) {
-        return -7;
-    }
-    if( LAPACKE_sge_nancheck( matrix_layout, n, n, b, ldb ) ) {
-        return -9;
-    }
-    if( wantq ) {
-        if( LAPACKE_sge_nancheck( matrix_layout, n, n, q, ldq ) ) {
-            return -14;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_sge_nancheck( matrix_layout, n, n, a, lda ) ) {
+            return -7;
         }
-    }
-    if( wantz ) {
-        if( LAPACKE_sge_nancheck( matrix_layout, n, n, z, ldz ) ) {
-            return -16;
+        if( LAPACKE_sge_nancheck( matrix_layout, n, n, b, ldb ) ) {
+            return -9;
+        }
+        if( wantq ) {
+            if( LAPACKE_sge_nancheck( matrix_layout, n, n, q, ldq ) ) {
+                return -14;
+            }
+        }
+        if( wantz ) {
+            if( LAPACKE_sge_nancheck( matrix_layout, n, n, z, ldz ) ) {
+                return -16;
+            }
         }
     }
 #endif
@@ -79,7 +80,7 @@ lapack_int LAPACKE_stgsen( int matrix_layout, lapack_int ijob,
     if( info != 0 ) {
         goto exit_level_0;
     }
-    liwork = (lapack_int)iwork_query;
+    liwork = iwork_query;
     lwork = (lapack_int)work_query;
     /* Allocate memory for work arrays */
     if( ijob != 0 ) {

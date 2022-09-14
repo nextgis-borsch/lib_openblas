@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dsgesv
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -46,12 +45,14 @@ lapack_int LAPACKE_dsgesv( int matrix_layout, lapack_int n, lapack_int nrhs,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dge_nancheck( matrix_layout, n, n, a, lda ) ) {
-        return -4;
-    }
-    if( LAPACKE_dge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
-        return -7;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dge_nancheck( matrix_layout, n, n, a, lda ) ) {
+            return -4;
+        }
+        if( LAPACKE_dge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
+            return -7;
+        }
     }
 #endif
     /* Allocate memory for working array(s) */

@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function zgttrf
 * Author: Intel Corporation
-* Generated November, 2011
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -38,15 +37,17 @@ lapack_int LAPACKE_zgttrf( lapack_int n, lapack_complex_double* dl,
                            lapack_complex_double* du2, lapack_int* ipiv )
 {
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_z_nancheck( n, d, 1 ) ) {
-        return -3;
-    }
-    if( LAPACKE_z_nancheck( n-1, dl, 1 ) ) {
-        return -2;
-    }
-    if( LAPACKE_z_nancheck( n-1, du, 1 ) ) {
-        return -4;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_z_nancheck( n, d, 1 ) ) {
+            return -3;
+        }
+        if( LAPACKE_z_nancheck( n-1, dl, 1 ) ) {
+            return -2;
+        }
+        if( LAPACKE_z_nancheck( n-1, du, 1 ) ) {
+            return -4;
+        }
     }
 #endif
     return LAPACKE_zgttrf_work( n, dl, d, du, du2, ipiv );

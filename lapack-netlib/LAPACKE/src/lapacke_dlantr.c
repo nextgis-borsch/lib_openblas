@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dlantr
 * Author: Intel Corporation
-* Generated June 2016
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -38,16 +37,18 @@ double LAPACKE_dlantr( int matrix_layout, char norm, char uplo, char diag,
                            lapack_int lda )
 {
     lapack_int info = 0;
-	double res = 0.;
+    double res = 0.;
     double* work = NULL;
     if( matrix_layout != LAPACK_COL_MAJOR && matrix_layout != LAPACK_ROW_MAJOR ) {
         LAPACKE_xerbla( "LAPACKE_dlantr", -1 );
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dtr_nancheck( matrix_layout, uplo, diag, MIN(m,n), a, lda ) ) {
-        return -7;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dtr_nancheck( matrix_layout, uplo, diag, MIN(m,n), a, lda ) ) {
+            return -7;
+        }
     }
 #endif
     /* Allocate memory for working array(s) */

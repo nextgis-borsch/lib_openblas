@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function stfsm
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -43,18 +42,20 @@ lapack_int LAPACKE_stfsm( int matrix_layout, char transr, char side, char uplo,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( IS_S_NONZERO(alpha) ) {
-        if( LAPACKE_stf_nancheck( matrix_layout, transr, uplo, diag, n, a ) ) {
-            return -10;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( IS_S_NONZERO(alpha) ) {
+            if( LAPACKE_stf_nancheck( matrix_layout, transr, uplo, diag, n, a ) ) {
+                return -10;
+            }
         }
-    }
-    if( LAPACKE_s_nancheck( 1, &alpha, 1 ) ) {
-        return -9;
-    }
-    if( IS_S_NONZERO(alpha) ) {
-        if( LAPACKE_sge_nancheck( matrix_layout, m, n, b, ldb ) ) {
-            return -11;
+        if( LAPACKE_s_nancheck( 1, &alpha, 1 ) ) {
+            return -9;
+        }
+        if( IS_S_NONZERO(alpha) ) {
+            if( LAPACKE_sge_nancheck( matrix_layout, m, n, b, ldb ) ) {
+                return -11;
+            }
         }
     }
 #endif

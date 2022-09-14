@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dgbsvx
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -50,29 +49,31 @@ lapack_int LAPACKE_dgbsvx( int matrix_layout, char fact, char trans,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dgb_nancheck( matrix_layout, n, n, kl, ku, ab, ldab ) ) {
-        return -8;
-    }
-    if( LAPACKE_lsame( fact, 'f' ) ) {
-        if( LAPACKE_dgb_nancheck( matrix_layout, n, n, kl, kl+ku, afb,
-            ldafb ) ) {
-            return -10;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dgb_nancheck( matrix_layout, n, n, kl, ku, ab, ldab ) ) {
+            return -8;
         }
-    }
-    if( LAPACKE_dge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
-        return -16;
-    }
-    if( LAPACKE_lsame( fact, 'f' ) && ( LAPACKE_lsame( *equed, 'b' ) ||
-        LAPACKE_lsame( *equed, 'c' ) ) ) {
-        if( LAPACKE_d_nancheck( n, c, 1 ) ) {
-            return -15;
+        if( LAPACKE_lsame( fact, 'f' ) ) {
+            if( LAPACKE_dgb_nancheck( matrix_layout, n, n, kl, kl+ku, afb,
+                ldafb ) ) {
+                return -10;
+            }
         }
-    }
-    if( LAPACKE_lsame( fact, 'f' ) && ( LAPACKE_lsame( *equed, 'b' ) ||
-        LAPACKE_lsame( *equed, 'r' ) ) ) {
-        if( LAPACKE_d_nancheck( n, r, 1 ) ) {
-            return -14;
+        if( LAPACKE_dge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
+            return -16;
+        }
+        if( LAPACKE_lsame( fact, 'f' ) && ( LAPACKE_lsame( *equed, 'b' ) ||
+            LAPACKE_lsame( *equed, 'c' ) ) ) {
+            if( LAPACKE_d_nancheck( n, c, 1 ) ) {
+                return -15;
+            }
+        }
+        if( LAPACKE_lsame( fact, 'f' ) && ( LAPACKE_lsame( *equed, 'b' ) ||
+            LAPACKE_lsame( *equed, 'r' ) ) ) {
+            if( LAPACKE_d_nancheck( n, r, 1 ) ) {
+                return -14;
+            }
         }
     }
 #endif

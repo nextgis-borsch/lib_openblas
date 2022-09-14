@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native middle-level C interface to LAPACK function dgghd3
 * Author: Intel Corporation
-* Generated January, 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -49,21 +48,23 @@ lapack_int LAPACKE_dgghd3( int matrix_layout, char compq, char compz,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dge_nancheck( matrix_layout, n, n, a, lda ) ) {
-        return -7;
-    }
-    if( LAPACKE_dge_nancheck( matrix_layout, n, n, b, ldb ) ) {
-        return -9;
-    }
-    if( LAPACKE_lsame( compq, 'i' ) || LAPACKE_lsame( compq, 'v' ) ) {
-        if( LAPACKE_dge_nancheck( matrix_layout, n, n, q, ldq ) ) {
-            return -11;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dge_nancheck( matrix_layout, n, n, a, lda ) ) {
+            return -7;
         }
-    }
-    if( LAPACKE_lsame( compz, 'i' ) || LAPACKE_lsame( compz, 'v' ) ) {
-        if( LAPACKE_dge_nancheck( matrix_layout, n, n, z, ldz ) ) {
-            return -13;
+        if( LAPACKE_dge_nancheck( matrix_layout, n, n, b, ldb ) ) {
+            return -9;
+        }
+        if( LAPACKE_lsame( compq, 'i' ) || LAPACKE_lsame( compq, 'v' ) ) {
+            if( LAPACKE_dge_nancheck( matrix_layout, n, n, q, ldq ) ) {
+                return -11;
+            }
+        }
+        if( LAPACKE_lsame( compz, 'i' ) || LAPACKE_lsame( compz, 'v' ) ) {
+            if( LAPACKE_dge_nancheck( matrix_layout, n, n, z, ldz ) ) {
+                return -13;
+            }
         }
     }
 #endif

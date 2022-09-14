@@ -60,11 +60,19 @@
 #endif
 */
 
-#define MB
-#define WMB
+#ifdef __GNUC__
+#define MB do { __asm__ __volatile__("": : :"memory"); } while (0)
+#define WMB do { __asm__ __volatile__("": : :"memory"); } while (0)
+#define RMB
+#else
+#define MB do {} while (0)
+#define WMB do {} while (0)
+#define RMB
+#endif
 
 static void __inline blas_lock(volatile BLASULONG *address){
 
+	
 #ifndef C_MSVC
   int ret;
 #else
@@ -72,7 +80,7 @@ static void __inline blas_lock(volatile BLASULONG *address){
 #endif
 
   do {
-    while (*address) {YIELDING;};
+    while (*address) {YIELDING;}
 
 #ifndef C_MSVC
     __asm__ __volatile__(
@@ -124,12 +132,36 @@ static __inline void cpuid(int op, int *eax, int *ebx, int *ecx, int *edx){
   *ecx=cpuinfo[2];
   *edx=cpuinfo[3];
 #else
-        __asm__ __volatile__("cpuid"
+        __asm__ __volatile__("mov $0, %%ecx;"
+			     "cpuid"
 			     : "=a" (*eax),
 			     "=b" (*ebx),
 			     "=c" (*ecx),
 			     "=d" (*edx)
 			     : "0" (op));
+#endif
+}
+
+static __inline void cpuid_count(int op, int count, int *eax, int *ebx, int *ecx, int *edx)
+{
+#ifdef C_MSVC
+  int cpuInfo[4] = {-1};
+  __cpuidex(cpuInfo, op, count);
+  *eax = cpuInfo[0];
+  *ebx = cpuInfo[1];
+  *ecx = cpuInfo[2];
+  *edx = cpuInfo[3];
+#else
+#if defined(__i386__) && defined(__PIC__)
+  __asm__ __volatile__
+    ("mov %%ebx, %%edi;"
+      "cpuid;"
+      "xchgl %%ebx, %%edi;"
+      : "=a" (*eax), "=D" (*ebx), "=c" (*ecx), "=d" (*edx) : "0" (op), "2" (count) : "cc");
+#else
+  __asm__ __volatile__
+    ("cpuid": "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx) : "0" (op), "2" (count) : "cc");
+#endif
 #endif
 }
 
@@ -190,16 +222,22 @@ static __inline BLASLONG blas_quickdivide(BLASLONG x, BLASLONG y){
 #else
 extern unsigned int blas_quick_divide_table[];
 
-static __inline int blas_quickdivide(unsigned int x, unsigned int y){
+static __inline unsigned int blas_quickdivide(unsigned int x, unsigned int y){
 
-  unsigned int result;
+  volatile unsigned int result;
 
   if (y <= 1) return x;
 
+#if (MAX_CPU_NUMBER > 64)  
+  if (y > 64) { 
+	  result = x / y;
+	  return result;
+  }
+#endif
+	
   y = blas_quick_divide_table[y];
 
-  __asm__ __volatile__  ("mull %0" :"=d" (result) :"a"(x), "0" (y));
-
+  __asm__ __volatile__  ("mull %0" :"=d" (result), "+a"(x) : "0" (y));
   return result;
 }
 #endif
@@ -212,7 +250,11 @@ static __inline int blas_quickdivide(unsigned int x, unsigned int y){
 #endif
 #define HUGE_PAGESIZE	( 2 << 20)
 
-#define BUFFER_SIZE	(32 << 20)
+#ifndef BUFFERSIZE
+#define BUFFER_SIZE	(32 << 22)
+#else
+#define BUFFER_SIZE	(32 << BUFFERSIZE)
+#endif
 
 #define SEEK_ADDRESS
 
@@ -264,7 +306,7 @@ static __inline int blas_quickdivide(unsigned int x, unsigned int y){
 #ifdef ASSEMBLER
 
 #if defined(PILEDRIVER) || defined(BULLDOZER) || defined(STEAMROLLER) || defined(EXCAVATOR)
-//Enable some optimazation for barcelona.
+//Enable some optimization for barcelona.
 #define BARCELONA_OPTIMIZATION
 #endif
 
@@ -403,13 +445,14 @@ REALNAME:
 #define EPILOGUE .end
 #endif
 
-#if defined(OS_LINUX) || defined(OS_FREEBSD) || defined(OS_NETBSD) || defined(__ELF__) || defined(C_PGI)
+#if defined(OS_LINUX) || defined(OS_FREEBSD) || defined(OS_NETBSD) || defined(OS_OPENBSD) || defined(OS_DRAGONFLY) || defined(__ELF__) || defined(C_PGI)
 #define PROLOGUE \
 	.text; \
 	.align 512; \
 	.globl REALNAME ;\
        .type REALNAME, @function; \
-REALNAME:
+REALNAME: \
+	_CET_ENDBR
 
 #ifdef PROFILE
 #define PROFCODE call *mcount@GOTPCREL(%rip)

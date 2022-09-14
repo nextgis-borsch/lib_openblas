@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dlaset
 * Author: Intel Corporation
-* Generated December 2016
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -49,11 +48,13 @@ lapack_int LAPACKE_dlaset( int matrix_layout, char uplo, lapack_int m,
 *****************************************************************************/
 
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    if( LAPACKE_d_nancheck( 1, &alpha, 1 ) ) {
-        return -5;
-    }
-    if( LAPACKE_d_nancheck( 1, &beta, 1 ) ) {
-        return -6;
+    if( LAPACKE_get_nancheck() ) {
+        if( LAPACKE_d_nancheck( 1, &alpha, 1 ) ) {
+            return -5;
+        }
+        if( LAPACKE_d_nancheck( 1, &beta, 1 ) ) {
+            return -6;
+        }
     }
 #endif
 

@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dsbgvd
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -50,12 +49,14 @@ lapack_int LAPACKE_dsbgvd( int matrix_layout, char jobz, char uplo, lapack_int n
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dsb_nancheck( matrix_layout, uplo, n, ka, ab, ldab ) ) {
-        return -7;
-    }
-    if( LAPACKE_dsb_nancheck( matrix_layout, uplo, n, kb, bb, ldbb ) ) {
-        return -9;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dsb_nancheck( matrix_layout, uplo, n, ka, ab, ldab ) ) {
+            return -7;
+        }
+        if( LAPACKE_dsb_nancheck( matrix_layout, uplo, n, kb, bb, ldbb ) ) {
+            return -9;
+        }
     }
 #endif
     /* Query optimal working array(s) size */
@@ -65,7 +66,7 @@ lapack_int LAPACKE_dsbgvd( int matrix_layout, char jobz, char uplo, lapack_int n
     if( info != 0 ) {
         goto exit_level_0;
     }
-    liwork = (lapack_int)iwork_query;
+    liwork = iwork_query;
     lwork = (lapack_int)work_query;
     /* Allocate memory for work arrays */
     iwork = (lapack_int*)LAPACKE_malloc( sizeof(lapack_int) * liwork );

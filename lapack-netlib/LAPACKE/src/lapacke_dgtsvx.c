@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dgtsvx
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -49,37 +48,39 @@ lapack_int LAPACKE_dgtsvx( int matrix_layout, char fact, char trans,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
-        return -14;
-    }
-    if( LAPACKE_d_nancheck( n, d, 1 ) ) {
-        return -7;
-    }
-    if( LAPACKE_lsame( fact, 'f' ) ) {
-        if( LAPACKE_d_nancheck( n, df, 1 ) ) {
-            return -10;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
+            return -14;
         }
-    }
-    if( LAPACKE_d_nancheck( n-1, dl, 1 ) ) {
-        return -6;
-    }
-    if( LAPACKE_lsame( fact, 'f' ) ) {
-        if( LAPACKE_d_nancheck( n-1, dlf, 1 ) ) {
-            return -9;
+        if( LAPACKE_d_nancheck( n, d, 1 ) ) {
+            return -7;
         }
-    }
-    if( LAPACKE_d_nancheck( n-1, du, 1 ) ) {
-        return -8;
-    }
-    if( LAPACKE_lsame( fact, 'f' ) ) {
-        if( LAPACKE_d_nancheck( n-2, du2, 1 ) ) {
-            return -12;
+        if( LAPACKE_lsame( fact, 'f' ) ) {
+            if( LAPACKE_d_nancheck( n, df, 1 ) ) {
+                return -10;
+            }
         }
-    }
-    if( LAPACKE_lsame( fact, 'f' ) ) {
-        if( LAPACKE_d_nancheck( n-1, duf, 1 ) ) {
-            return -11;
+        if( LAPACKE_d_nancheck( n-1, dl, 1 ) ) {
+            return -6;
+        }
+        if( LAPACKE_lsame( fact, 'f' ) ) {
+            if( LAPACKE_d_nancheck( n-1, dlf, 1 ) ) {
+                return -9;
+            }
+        }
+        if( LAPACKE_d_nancheck( n-1, du, 1 ) ) {
+            return -8;
+        }
+        if( LAPACKE_lsame( fact, 'f' ) ) {
+            if( LAPACKE_d_nancheck( n-2, du2, 1 ) ) {
+                return -12;
+            }
+        }
+        if( LAPACKE_lsame( fact, 'f' ) ) {
+            if( LAPACKE_d_nancheck( n-1, duf, 1 ) ) {
+                return -11;
+            }
         }
     }
 #endif

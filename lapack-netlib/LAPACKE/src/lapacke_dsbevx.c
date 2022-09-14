@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dsbevx
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -48,21 +47,23 @@ lapack_int LAPACKE_dsbevx( int matrix_layout, char jobz, char range, char uplo,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dsb_nancheck( matrix_layout, uplo, n, kd, ab, ldab ) ) {
-        return -7;
-    }
-    if( LAPACKE_d_nancheck( 1, &abstol, 1 ) ) {
-        return -15;
-    }
-    if( LAPACKE_lsame( range, 'v' ) ) {
-        if( LAPACKE_d_nancheck( 1, &vl, 1 ) ) {
-            return -11;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dsb_nancheck( matrix_layout, uplo, n, kd, ab, ldab ) ) {
+            return -7;
         }
-    }
-    if( LAPACKE_lsame( range, 'v' ) ) {
-        if( LAPACKE_d_nancheck( 1, &vu, 1 ) ) {
-            return -12;
+        if( LAPACKE_d_nancheck( 1, &abstol, 1 ) ) {
+            return -15;
+        }
+        if( LAPACKE_lsame( range, 'v' ) ) {
+            if( LAPACKE_d_nancheck( 1, &vl, 1 ) ) {
+                return -11;
+            }
+        }
+        if( LAPACKE_lsame( range, 'v' ) ) {
+            if( LAPACKE_d_nancheck( 1, &vu, 1 ) ) {
+                return -12;
+            }
         }
     }
 #endif

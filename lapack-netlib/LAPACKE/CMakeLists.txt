@@ -1,7 +1,7 @@
 message(STATUS "LAPACKE enable")
 enable_language(C)
 
-set(LAPACK_INSTALL_EXPORT_NAME lapacke-targets)
+set(LAPACK_INSTALL_EXPORT_NAME ${LAPACKELIB}-targets)
 
 # Create a header file lapacke_mangling.h for the routines called in my C programs
 include(FortranCInterface)
@@ -16,17 +16,15 @@ if(NOT FortranCInterface_GLOBAL_FOUND OR NOT FortranCInterface_MODULE_FOUND)
                  ${LAPACK_BINARY_DIR}/include/lapacke_mangling.h)
 endif()
 
-if(WIN32 AND NOT UNIX)
-  add_definitions(-DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE)
-  message(STATUS "Windows BUILD")
-endif()
-
-get_directory_property(DirDefs COMPILE_DEFINITIONS)
-
 include_directories(include ${LAPACK_BINARY_DIR}/include)
 add_subdirectory(include)
 add_subdirectory(src)
 add_subdirectory(utils)
+
+option(LAPACKE_BUILD_SINGLE "Build LAPACKE single precision real" ON)
+option(LAPACKE_BUILD_DOUBLE "Build LAPACKE double precision real" ON)
+option(LAPACKE_BUILD_COMPLEX "Build LAPACKE single precision complex" ON)
+option(LAPACKE_BUILD_COMPLEX16 "Build LAPACKE double precision complex" ON)
 
 macro(append_subdir_files variable dirname)
   get_directory_property(holder DIRECTORY ${dirname} DEFINITION ${variable})
@@ -35,51 +33,102 @@ macro(append_subdir_files variable dirname)
   endforeach()
 endmacro()
 
-append_subdir_files(LAPACKE_INCLUDE "include")
-append_subdir_files(SRC_OBJ "src")
-append_subdir_files(SRCX_OBJ "src")
-append_subdir_files(MATGEN_OBJ "src")
-append_subdir_files(UTILS_OBJ "utils")
+message(STATUS "Build LAPACKE single precision real: ${LAPACKE_BUILD_SINGLE}")
+message(STATUS "Build LAPACKE double precision real: ${LAPACKE_BUILD_DOUBLE}")
+message(STATUS "Build LAPACKE single precision complex: ${LAPACKE_BUILD_COMPLEX}")
+message(STATUS "Build LAPACKE double precision complex: ${LAPACKE_BUILD_COMPLEX16}")
 
+append_subdir_files(LAPACKE_INCLUDE "include")
+append_subdir_files(SOURCES "src")
+if (LAPACKE_BUILD_SINGLE)
+  append_subdir_files(SOURCES_SINGLE "src")
+  list(APPEND SOURCES ${SOURCES_SINGLE})
+endif()
+if (LAPACKE_BUILD_DOUBLE)
+  append_subdir_files(SOURCES_DOUBLE "src")
+  list(APPEND SOURCES ${SOURCES_DOUBLE})
+endif()
+if (LAPACKE_BUILD_COMPLEX)
+  append_subdir_files(SOURCES_COMPLEX "src")
+  list(APPEND SOURCES ${SOURCES_COMPLEX})
+endif()
+if (LAPACKE_BUILD_COMPLEX16)
+  append_subdir_files(SOURCES_COMPLEX16 "src")
+  list(APPEND SOURCES ${SOURCES_COMPLEX16})
+endif()
+append_subdir_files(DEPRECATED "src")
+append_subdir_files(EXTENDED "src")
+append_subdir_files(MATGEN "src")
+append_subdir_files(UTILS "utils")
+
+if(BUILD_DEPRECATED)
+  list(APPEND SOURCES ${DEPRECATED})
+endif()
 if(USE_XBLAS)
-  add_library(lapacke ${SRC_OBJ} ${SRCX_OBJ} ${UTILS_OBJ})
-  target_link_libraries(lapacke ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${XBLAS_LIBRARY})
-else()
-  if(LAPACKE_WITH_TMG)
-    add_library(lapacke ${SRC_OBJ} ${MATGEN_OBJ} ${UTILS_OBJ})
-    target_link_libraries(lapacke tmglib ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
-  else()
-    add_library(lapacke ${SRC_OBJ} ${UTILS_OBJ})
-    target_link_libraries(lapacke ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
-  endif()
+  list(APPEND SOURCES ${EXTENDED})
+endif()
+if(LAPACKE_WITH_TMG)
+  list(APPEND SOURCES ${MATGEN})
+endif()
+list(APPEND SOURCES ${UTILS})
+
+add_library(${LAPACKELIB} ${SOURCES})
+set_target_properties(
+  ${LAPACKELIB} PROPERTIES
+  LINKER_LANGUAGE C
+  VERSION ${LAPACK_VERSION}
+  SOVERSION ${LAPACK_MAJOR_VERSION}
+  )
+target_include_directories(${LAPACKELIB} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+if(WIN32 AND NOT UNIX)
+  target_compile_definitions(${LAPACKELIB} PUBLIC HAVE_LAPACK_CONFIG_H LAPACK_COMPLEX_STRUCTURE)
+  message(STATUS "Windows BUILD")
 endif()
 
-lapack_install_library(lapacke)
-install(FILES ${LAPACKE_INCLUDE} ${LAPACK_BINARY_DIR}/include/lapacke_mangling.h DESTINATION include)
+if(LAPACKE_WITH_TMG)
+  target_link_libraries(${LAPACKELIB} PRIVATE ${TMGLIB})
+endif()
+target_link_libraries(${LAPACKELIB} PRIVATE ${LAPACK_LIBRARIES})
+
 
 if(BUILD_TESTING)
   add_subdirectory(example)
 endif()
 
+if(NOT SKIP_INSTALL_HEADERS AND NOT SKIP_INSTALL_ALL)
+    lapack_install_library(${LAPACKELIB})
+    install(
+      FILES ${LAPACKE_INCLUDE} ${LAPACK_BINARY_DIR}/include/lapacke_mangling.h
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+      COMPONENT Development
+      )
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lapacke.pc.in ${CMAKE_CURRENT_BINARY_DIR}/lapacke.pc @ONLY)
-install(FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/lapacke.pc
-  DESTINATION ${PKG_CONFIG_DIR}
-  )
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lapacke.pc.in ${CMAKE_CURRENT_BINARY_DIR}/${LAPACKELIB}.pc @ONLY)
+    install(FILES
+      ${CMAKE_CURRENT_BINARY_DIR}/${LAPACKELIB}.pc
+      DESTINATION ${PKG_CONFIG_DIR}
+      COMPONENT Development
+      )
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/lapacke-config-version.cmake.in
-  ${LAPACK_BINARY_DIR}/lapacke-config-version.cmake @ONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/lapacke-config-build.cmake.in
-  ${LAPACK_BINARY_DIR}/lapacke-config.cmake @ONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/lapacke-config-version.cmake.in
+      ${LAPACK_BINARY_DIR}/${LAPACKELIB}-config-version.cmake @ONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/lapacke-config-build.cmake.in
+      ${LAPACK_BINARY_DIR}/${LAPACKELIB}-config.cmake @ONLY)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/lapacke-config-install.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/lapacke-config.cmake @ONLY)
-install(FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/lapacke-config.cmake
-  ${LAPACK_BINARY_DIR}/lapacke-config-version.cmake
-  DESTINATION ${LIBRARY_DIR}/cmake/lapacke-${LAPACK_VERSION}
-  )
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/lapacke-config-install.cmake.in
+      ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${LAPACKELIB}-config.cmake @ONLY)
+    install(FILES
+      ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${LAPACKELIB}-config.cmake
+      ${LAPACK_BINARY_DIR}/${LAPACKELIB}-config-version.cmake
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${LAPACKELIB}-${LAPACK_VERSION}
+      COMPONENT Development
+      )
 
-install(EXPORT lapacke-targets
-  DESTINATION ${LIBRARY_DIR}/cmake/lapacke-${LAPACK_VERSION})
+    install(EXPORT ${LAPACKELIB}-targets
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${LAPACKELIB}-${LAPACK_VERSION}
+      COMPONENT Development
+      )
+endif()

@@ -28,7 +28,6 @@
 ******************************************************************************
 * Contents: Native high-level C interface to LAPACK function csyr
 * Author: Intel Corporation
-* Generated March, 2012
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -43,15 +42,17 @@ lapack_int LAPACKE_csyr( int matrix_layout, char uplo, lapack_int n,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_csy_nancheck( matrix_layout, uplo, n, a, lda ) ) {
-        return -7;
-    }
-    if( LAPACKE_c_nancheck( 1, &alpha, 1 ) ) {
-        return -4;
-    }
-    if( LAPACKE_c_nancheck( n, x, 1 ) ) {
-        return -5;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_csy_nancheck( matrix_layout, uplo, n, a, lda ) ) {
+            return -7;
+        }
+        if( LAPACKE_c_nancheck( 1, &alpha, 1 ) ) {
+            return -4;
+        }
+        if( LAPACKE_c_nancheck( n, x, 1 ) ) {
+            return -5;
+        }
     }
 #endif
     return LAPACKE_csyr_work( matrix_layout, uplo, n, alpha, x, incx, a,

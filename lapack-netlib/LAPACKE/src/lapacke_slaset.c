@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function slaset
 * Author: Intel Corporation
-* Generated December 2016
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -49,12 +48,14 @@ lapack_int LAPACKE_slaset( int matrix_layout, char uplo, lapack_int m,
 *****************************************************************************/
 
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_s_nancheck( 1, &alpha, 1 ) ) {
-        return -5;
-    }
-    if( LAPACKE_s_nancheck( 1, &beta, 1 ) ) {
-        return -6;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_s_nancheck( 1, &alpha, 1 ) ) {
+            return -5;
+        }
+        if( LAPACKE_s_nancheck( 1, &beta, 1 ) ) {
+            return -6;
+        }
     }
 #endif
 

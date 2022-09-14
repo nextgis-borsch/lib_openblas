@@ -67,7 +67,12 @@
 #endif
 
 typedef struct {
-  volatile BLASLONG working[MAX_CPU_NUMBER][CACHE_LINE_SIZE * DIVIDE_RATE];
+#ifdef HAVE_C11
+_Atomic
+#else 
+  volatile
+#endif
+   BLASLONG working[MAX_CPU_NUMBER][CACHE_LINE_SIZE * DIVIDE_RATE];
 } job_t;
 
 
@@ -200,9 +205,9 @@ static int inner_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, 
 
   if ((k == 0) || (alpha == NULL)) return 0;
 
-  if ((alpha[0] == ZERO)
+  if (alpha[0] == ZERO
 #if defined(COMPLEX) && !defined(HERK)
-      && (alpha[1] == ZERO)
+      && alpha[1] == ZERO
 #endif
       ) return 0;
 
@@ -521,7 +526,7 @@ int CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa, FLO
   BLASLONG width, i, j, k;
   BLASLONG n, n_from, n_to;
   int  mode, mask;
-  double dnum;
+  double dnum, di, dinum;
 
   if ((nthreads  == 1) || (args -> n < nthreads * SWITCH_RATIO)) {
     SYRK_LOCAL(args, range_m, range_n, sa, sb, 0);
@@ -596,9 +601,14 @@ int CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa, FLO
 
     if (nthreads - num_cpu > 1) {
 
-      double di   = (double)i;
+      di   = (double)i;
 
-      width = (((BLASLONG)((sqrt(di * di + dnum) - di) + mask)/(mask+1)) * (mask+1) );
+      dinum = di * di + dnum;
+
+      if (dinum > 0)
+        width = (((BLASLONG)((sqrt(dinum) - di) + mask)/(mask+1)) * (mask+1) );
+      else
+        width = (((BLASLONG)(- di + mask)/(mask+1)) * (mask+1) );
 
       if (num_cpu == 0) width = n - (((n - width)/(mask+1)) * (mask+1) );
 
@@ -638,10 +648,15 @@ int CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa, FLO
 
     if (nthreads - num_cpu > 1) {
 
-	double di   = (double)i;
+	di   = (double)i;
 
-	width = (((BLASLONG)((sqrt(di * di + dnum) - di) + mask)/(mask+1)) * (mask+1));
+	dinum = di * di +dnum;
 
+        if (dinum > 0)
+	  width = (((BLASLONG)((sqrt(di * di + dnum) - di) + mask)/(mask+1)) * (mask+1));
+        else
+          width = (((BLASLONG)(- di + mask)/(mask+1)) * (mask+1));
+      
       if ((width > n - i) || (width < mask)) width = n - i;
 
     } else {

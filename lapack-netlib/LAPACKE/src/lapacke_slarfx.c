@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function slarfx
 * Author: Intel Corporation
-* Generated April, 2011
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -37,20 +36,24 @@ lapack_int LAPACKE_slarfx( int matrix_layout, char side, lapack_int m,
                            lapack_int n, const float* v, float tau, float* c,
                            lapack_int ldc, float* work )
 {
+    lapack_int lv;
     if( matrix_layout != LAPACK_COL_MAJOR && matrix_layout != LAPACK_ROW_MAJOR ) {
         LAPACKE_xerbla( "LAPACKE_slarfx", -1 );
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_sge_nancheck( matrix_layout, m, n, c, ldc ) ) {
-        return -7;
-    }
-    if( LAPACKE_s_nancheck( 1, &tau, 1 ) ) {
-        return -6;
-    }
-    if( LAPACKE_s_nancheck( m, v, 1 ) ) {
-        return -5;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_sge_nancheck( matrix_layout, m, n, c, ldc ) ) {
+            return -7;
+        }
+        if( LAPACKE_s_nancheck( 1, &tau, 1 ) ) {
+            return -6;
+        }
+        lv = (LAPACKE_lsame( side, 'l' ) ? m : n);
+        if( LAPACKE_s_nancheck( lv, v, 1 ) ) {
+            return -5;
+        }
     }
 #endif
     return LAPACKE_slarfx_work( matrix_layout, side, m, n, v, tau, c, ldc,

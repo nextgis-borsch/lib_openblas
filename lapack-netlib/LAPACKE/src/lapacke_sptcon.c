@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function sptcon
 * Author: Intel Corporation
-* Generated November, 2011
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -39,15 +38,17 @@ lapack_int LAPACKE_sptcon( lapack_int n, const float* d, const float* e,
     lapack_int info = 0;
     float* work = NULL;
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_s_nancheck( 1, &anorm, 1 ) ) {
-        return -4;
-    }
-    if( LAPACKE_s_nancheck( n, d, 1 ) ) {
-        return -2;
-    }
-    if( LAPACKE_s_nancheck( n-1, e, 1 ) ) {
-        return -3;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_s_nancheck( 1, &anorm, 1 ) ) {
+            return -4;
+        }
+        if( LAPACKE_s_nancheck( n, d, 1 ) ) {
+            return -2;
+        }
+        if( LAPACKE_s_nancheck( n-1, e, 1 ) ) {
+            return -3;
+        }
     }
 #endif
     /* Allocate memory for working array(s) */

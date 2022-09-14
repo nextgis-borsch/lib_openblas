@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dspgst
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -41,12 +40,14 @@ lapack_int LAPACKE_dspgst( int matrix_layout, lapack_int itype, char uplo,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dsp_nancheck( n, ap ) ) {
-        return -5;
-    }
-    if( LAPACKE_dsp_nancheck( n, bp ) ) {
-        return -6;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dsp_nancheck( n, ap ) ) {
+            return -5;
+        }
+        if( LAPACKE_dsp_nancheck( n, bp ) ) {
+            return -6;
+        }
     }
 #endif
     return LAPACKE_dspgst_work( matrix_layout, itype, uplo, n, ap, bp );

@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function cgbequb
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -44,9 +43,11 @@ lapack_int LAPACKE_cgbequb( int matrix_layout, lapack_int m, lapack_int n,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_cgb_nancheck( matrix_layout, m, n, kl, ku, ab, ldab ) ) {
-        return -6;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_cgb_nancheck( matrix_layout, m, n, kl, ku, ab, ldab ) ) {
+            return -6;
+        }
     }
 #endif
     return LAPACKE_cgbequb_work( matrix_layout, m, n, kl, ku, ab, ldab, r, c,

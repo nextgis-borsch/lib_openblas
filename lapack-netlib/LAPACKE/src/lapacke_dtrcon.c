@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dtrcon
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -45,9 +44,11 @@ lapack_int LAPACKE_dtrcon( int matrix_layout, char norm, char uplo, char diag,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dtr_nancheck( matrix_layout, uplo, diag, n, a, lda ) ) {
-        return -6;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dtr_nancheck( matrix_layout, uplo, diag, n, a, lda ) ) {
+            return -6;
+        }
     }
 #endif
     /* Allocate memory for working array(s) */

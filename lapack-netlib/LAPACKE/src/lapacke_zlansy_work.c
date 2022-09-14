@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native middle-level C interface to LAPACK function zlansy
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -38,7 +37,7 @@ double LAPACKE_zlansy_work( int matrix_layout, char norm, char uplo,
                                 lapack_int lda, double* work )
 {
     lapack_int info = 0;
-	double res = 0.;
+    double res = 0.;
     if( matrix_layout == LAPACK_COL_MAJOR ) {
         /* Call LAPACK function and adjust info */
         res = LAPACK_zlansy( &norm, &uplo, &n, a, &lda, work );

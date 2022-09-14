@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function chpevx
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -48,21 +47,23 @@ lapack_int LAPACKE_chpevx( int matrix_layout, char jobz, char range, char uplo,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_s_nancheck( 1, &abstol, 1 ) ) {
-        return -11;
-    }
-    if( LAPACKE_chp_nancheck( n, ap ) ) {
-        return -6;
-    }
-    if( LAPACKE_lsame( range, 'v' ) ) {
-        if( LAPACKE_s_nancheck( 1, &vl, 1 ) ) {
-            return -7;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_s_nancheck( 1, &abstol, 1 ) ) {
+            return -11;
         }
-    }
-    if( LAPACKE_lsame( range, 'v' ) ) {
-        if( LAPACKE_s_nancheck( 1, &vu, 1 ) ) {
-            return -8;
+        if( LAPACKE_chp_nancheck( n, ap ) ) {
+            return -6;
+        }
+        if( LAPACKE_lsame( range, 'v' ) ) {
+            if( LAPACKE_s_nancheck( 1, &vl, 1 ) ) {
+                return -7;
+            }
+        }
+        if( LAPACKE_lsame( range, 'v' ) ) {
+            if( LAPACKE_s_nancheck( 1, &vu, 1 ) ) {
+                return -8;
+            }
         }
     }
 #endif

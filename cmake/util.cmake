@@ -29,8 +29,8 @@
 function(check_version major minor patch)
 
     set(VERSION_MAJOR 0)
-    set(VERSION_MINOR 2)
-    set(VERSION_PATCH 20)
+    set(VERSION_MINOR 3)
+    set(VERSION_PATCH 21)
 
     set(${major} ${VERSION_MAJOR} PARENT_SCOPE)
     set(${minor} ${VERSION_MINOR} PARENT_SCOPE)

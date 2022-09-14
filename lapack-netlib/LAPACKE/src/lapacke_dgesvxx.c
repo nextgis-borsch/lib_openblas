@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dgesvxx
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -51,33 +50,35 @@ lapack_int LAPACKE_dgesvxx( int matrix_layout, char fact, char trans,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dge_nancheck( matrix_layout, n, n, a, lda ) ) {
-        return -6;
-    }
-    if( LAPACKE_lsame( fact, 'f' ) ) {
-        if( LAPACKE_dge_nancheck( matrix_layout, n, n, af, ldaf ) ) {
-            return -8;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dge_nancheck( matrix_layout, n, n, a, lda ) ) {
+            return -6;
         }
-    }
-    if( LAPACKE_dge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
-        return -14;
-    }
-    if( LAPACKE_lsame( fact, 'f' ) && ( LAPACKE_lsame( *equed, 'b' ) ||
-        LAPACKE_lsame( *equed, 'c' ) ) ) {
-        if( LAPACKE_d_nancheck( n, c, 1 ) ) {
-            return -13;
+        if( LAPACKE_lsame( fact, 'f' ) ) {
+            if( LAPACKE_dge_nancheck( matrix_layout, n, n, af, ldaf ) ) {
+                return -8;
+            }
         }
-    }
-    if( nparams>0 ) {
-        if( LAPACKE_d_nancheck( nparams, params, 1 ) ) {
-            return -25;
+        if( LAPACKE_dge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
+            return -14;
         }
-    }
-    if( LAPACKE_lsame( fact, 'f' ) && ( LAPACKE_lsame( *equed, 'b' ) ||
-        LAPACKE_lsame( *equed, 'r' ) ) ) {
-        if( LAPACKE_d_nancheck( n, r, 1 ) ) {
-            return -12;
+        if( LAPACKE_lsame( fact, 'f' ) && ( LAPACKE_lsame( *equed, 'b' ) ||
+            LAPACKE_lsame( *equed, 'c' ) ) ) {
+            if( LAPACKE_d_nancheck( n, c, 1 ) ) {
+                return -13;
+            }
+        }
+        if( nparams>0 ) {
+            if( LAPACKE_d_nancheck( nparams, params, 1 ) ) {
+                return -25;
+            }
+        }
+        if( LAPACKE_lsame( fact, 'f' ) && ( LAPACKE_lsame( *equed, 'b' ) ||
+            LAPACKE_lsame( *equed, 'r' ) ) ) {
+            if( LAPACKE_d_nancheck( n, r, 1 ) ) {
+                return -12;
+            }
         }
     }
 #endif

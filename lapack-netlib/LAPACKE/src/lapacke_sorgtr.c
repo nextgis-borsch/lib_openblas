@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function sorgtr
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -45,12 +44,14 @@ lapack_int LAPACKE_sorgtr( int matrix_layout, char uplo, lapack_int n, float* a,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_sge_nancheck( matrix_layout, n, n, a, lda ) ) {
-        return -4;
-    }
-    if( LAPACKE_s_nancheck( n-1, tau, 1 ) ) {
-        return -6;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_ssy_nancheck( matrix_layout, uplo, n, a, lda ) ) {
+            return -4;
+        }
+        if( LAPACKE_s_nancheck( n-1, tau, 1 ) ) {
+            return -6;
+        }
     }
 #endif
     /* Query optimal working array(s) size */

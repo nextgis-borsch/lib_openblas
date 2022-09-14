@@ -28,7 +28,6 @@
 ******************************************************************************
 * Contents: Native high-level C interface to LAPACK function ctpqrt2
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -44,12 +43,14 @@ lapack_int LAPACKE_ctpqrt2( int matrix_layout,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_cge_nancheck( matrix_layout, n, n, a, lda ) ) {
-        return -4;
-    }
-    if( LAPACKE_cge_nancheck( matrix_layout, m, n, b, ldb ) ) {
-        return -6;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_cge_nancheck( matrix_layout, n, n, a, lda ) ) {
+            return -4;
+        }
+        if( LAPACKE_cge_nancheck( matrix_layout, m, n, b, ldb ) ) {
+            return -6;
+        }
     }
 #endif
     return LAPACKE_ctpqrt2_work( matrix_layout, m, n, l, a, lda, b, ldb, t, ldt );

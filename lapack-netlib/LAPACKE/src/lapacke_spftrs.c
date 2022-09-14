@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function spftrs
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -42,12 +41,14 @@ lapack_int LAPACKE_spftrs( int matrix_layout, char transr, char uplo,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_spf_nancheck( n, a ) ) {
-        return -6;
-    }
-    if( LAPACKE_sge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
-        return -7;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_spf_nancheck( n, a ) ) {
+            return -6;
+        }
+        if( LAPACKE_sge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
+            return -7;
+        }
     }
 #endif
     return LAPACKE_spftrs_work( matrix_layout, transr, uplo, n, nrhs, a, b,

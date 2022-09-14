@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dgebal
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -42,11 +41,13 @@ lapack_int LAPACKE_dgebal( int matrix_layout, char job, lapack_int n, double* a,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_lsame( job, 'b' ) || LAPACKE_lsame( job, 'p' ) ||
-        LAPACKE_lsame( job, 's' ) ) {
-        if( LAPACKE_dge_nancheck( matrix_layout, n, n, a, lda ) ) {
-            return -4;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_lsame( job, 'b' ) || LAPACKE_lsame( job, 'p' ) ||
+            LAPACKE_lsame( job, 's' ) ) {
+            if( LAPACKE_dge_nancheck( matrix_layout, n, n, a, lda ) ) {
+                return -4;
+            }
         }
     }
 #endif

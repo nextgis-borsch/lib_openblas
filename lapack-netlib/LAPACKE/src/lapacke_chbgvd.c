@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function chbgvd
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -54,12 +53,14 @@ lapack_int LAPACKE_chbgvd( int matrix_layout, char jobz, char uplo, lapack_int n
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_chb_nancheck( matrix_layout, uplo, n, ka, ab, ldab ) ) {
-        return -7;
-    }
-    if( LAPACKE_chb_nancheck( matrix_layout, uplo, n, kb, bb, ldbb ) ) {
-        return -9;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_chb_nancheck( matrix_layout, uplo, n, ka, ab, ldab ) ) {
+            return -7;
+        }
+        if( LAPACKE_chb_nancheck( matrix_layout, uplo, n, kb, bb, ldbb ) ) {
+            return -9;
+        }
     }
 #endif
     /* Query optimal working array(s) size */
@@ -69,7 +70,7 @@ lapack_int LAPACKE_chbgvd( int matrix_layout, char jobz, char uplo, lapack_int n
     if( info != 0 ) {
         goto exit_level_0;
     }
-    liwork = (lapack_int)iwork_query;
+    liwork = iwork_query;
     lrwork = (lapack_int)rwork_query;
     lwork = LAPACK_C2INT( work_query );
     /* Allocate memory for work arrays */

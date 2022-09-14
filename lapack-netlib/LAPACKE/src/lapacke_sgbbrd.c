@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function sgbbrd
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -46,13 +45,15 @@ lapack_int LAPACKE_sgbbrd( int matrix_layout, char vect, lapack_int m,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_sgb_nancheck( matrix_layout, m, n, kl, ku, ab, ldab ) ) {
-        return -8;
-    }
-    if( ncc != 0 ) {
-        if( LAPACKE_sge_nancheck( matrix_layout, m, ncc, c, ldc ) ) {
-            return -16;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_sgb_nancheck( matrix_layout, m, n, kl, ku, ab, ldab ) ) {
+            return -8;
+        }
+        if( ncc != 0 ) {
+            if( LAPACKE_sge_nancheck( matrix_layout, m, ncc, c, ldc ) ) {
+                return -16;
+            }
         }
     }
 #endif

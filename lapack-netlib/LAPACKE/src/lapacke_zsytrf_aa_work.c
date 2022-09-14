@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native middle-level C interface to LAPACK function zsytrf
 * Author: Intel Corporation
-* Generated December 2016
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -41,7 +40,7 @@ lapack_int LAPACKE_zsytrf_aa_work( int matrix_layout, char uplo, lapack_int n,
     lapack_int info = 0;
     if( matrix_layout == LAPACK_COL_MAJOR ) {
         /* Call LAPACK function and adjust info */
-        LAPACK_zsytrf( &uplo, &n, a, &lda, ipiv, work, &lwork, &info );
+        LAPACK_zsytrf_aa( &uplo, &n, a, &lda, ipiv, work, &lwork, &info );
         if( info < 0 ) {
             info = info - 1;
         }
@@ -56,7 +55,7 @@ lapack_int LAPACKE_zsytrf_aa_work( int matrix_layout, char uplo, lapack_int n,
         }
         /* Query optimal working array(s) size if requested */
         if( lwork == -1 ) {
-            LAPACK_zsytrf( &uplo, &n, a, &lda_t, ipiv, work, &lwork, &info );
+            LAPACK_zsytrf_aa( &uplo, &n, a, &lda_t, ipiv, work, &lwork, &info );
             return (info < 0) ? (info - 1) : info;
         }
         /* Allocate memory for temporary array(s) */
@@ -69,7 +68,7 @@ lapack_int LAPACKE_zsytrf_aa_work( int matrix_layout, char uplo, lapack_int n,
         /* Transpose input matrices */
         LAPACKE_zsy_trans( matrix_layout, uplo, n, a, lda, a_t, lda_t );
         /* Call LAPACK function and adjust info */
-        LAPACK_zsytrf( &uplo, &n, a_t, &lda_t, ipiv, work, &lwork, &info );
+        LAPACK_zsytrf_aa( &uplo, &n, a_t, &lda_t, ipiv, work, &lwork, &info );
         if( info < 0 ) {
             info = info - 1;
         }

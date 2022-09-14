@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function ztgsyl
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -53,24 +52,26 @@ lapack_int LAPACKE_ztgsyl( int matrix_layout, char trans, lapack_int ijob,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_zge_nancheck( matrix_layout, m, m, a, lda ) ) {
-        return -6;
-    }
-    if( LAPACKE_zge_nancheck( matrix_layout, n, n, b, ldb ) ) {
-        return -8;
-    }
-    if( LAPACKE_zge_nancheck( matrix_layout, m, n, c, ldc ) ) {
-        return -10;
-    }
-    if( LAPACKE_zge_nancheck( matrix_layout, m, m, d, ldd ) ) {
-        return -12;
-    }
-    if( LAPACKE_zge_nancheck( matrix_layout, n, n, e, lde ) ) {
-        return -14;
-    }
-    if( LAPACKE_zge_nancheck( matrix_layout, m, n, f, ldf ) ) {
-        return -16;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_zge_nancheck( matrix_layout, m, m, a, lda ) ) {
+            return -6;
+        }
+        if( LAPACKE_zge_nancheck( matrix_layout, n, n, b, ldb ) ) {
+            return -8;
+        }
+        if( LAPACKE_zge_nancheck( matrix_layout, m, n, c, ldc ) ) {
+            return -10;
+        }
+        if( LAPACKE_zge_nancheck( matrix_layout, m, m, d, ldd ) ) {
+            return -12;
+        }
+        if( LAPACKE_zge_nancheck( matrix_layout, n, n, e, lde ) ) {
+            return -14;
+        }
+        if( LAPACKE_zge_nancheck( matrix_layout, m, n, f, ldf ) ) {
+            return -16;
+        }
     }
 #endif
     /* Allocate memory for working array(s) */

@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function clag2z
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -42,9 +41,11 @@ lapack_int LAPACKE_clag2z( int matrix_layout, lapack_int m, lapack_int n,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_cge_nancheck( matrix_layout, m, n, sa, ldsa ) ) {
-        return -4;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_cge_nancheck( matrix_layout, m, n, sa, ldsa ) ) {
+            return -4;
+        }
     }
 #endif
     return LAPACKE_clag2z_work( matrix_layout, m, n, sa, ldsa, a, lda );

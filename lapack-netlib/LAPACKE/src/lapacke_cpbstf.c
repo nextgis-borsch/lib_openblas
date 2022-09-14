@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function cpbstf
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -42,9 +41,11 @@ lapack_int LAPACKE_cpbstf( int matrix_layout, char uplo, lapack_int n,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_cpb_nancheck( matrix_layout, uplo, n, kb, bb, ldbb ) ) {
-        return -5;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_cpb_nancheck( matrix_layout, uplo, n, kb, bb, ldbb ) ) {
+            return -5;
+        }
     }
 #endif
     return LAPACKE_cpbstf_work( matrix_layout, uplo, n, kb, bb, ldbb );

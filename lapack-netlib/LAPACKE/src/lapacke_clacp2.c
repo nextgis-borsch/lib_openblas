@@ -28,7 +28,6 @@
 ******************************************************************************
 * Contents: Native high-level C interface to LAPACK function clacp2
 * Author: Intel Corporation
-* Generated January, 2013
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -42,9 +41,11 @@ lapack_int LAPACKE_clacp2( int matrix_layout, char uplo, lapack_int m,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_sge_nancheck( matrix_layout, m, n, a, lda ) ) {
-        return -5;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_sge_nancheck( matrix_layout, m, n, a, lda ) ) {
+            return -5;
+        }
     }
 #endif
     return LAPACKE_clacp2_work( matrix_layout, uplo, m, n, a, lda, b, ldb );

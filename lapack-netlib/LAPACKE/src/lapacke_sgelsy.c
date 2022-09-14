@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function sgelsy
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -47,15 +46,17 @@ lapack_int LAPACKE_sgelsy( int matrix_layout, lapack_int m, lapack_int n,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_sge_nancheck( matrix_layout, m, n, a, lda ) ) {
-        return -5;
-    }
-    if( LAPACKE_sge_nancheck( matrix_layout, MAX(m,n), nrhs, b, ldb ) ) {
-        return -7;
-    }
-    if( LAPACKE_s_nancheck( 1, &rcond, 1 ) ) {
-        return -10;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_sge_nancheck( matrix_layout, m, n, a, lda ) ) {
+            return -5;
+        }
+        if( LAPACKE_sge_nancheck( matrix_layout, MAX(m,n), nrhs, b, ldb ) ) {
+            return -7;
+        }
+        if( LAPACKE_s_nancheck( 1, &rcond, 1 ) ) {
+            return -10;
+        }
     }
 #endif
     /* Query optimal working array(s) size */

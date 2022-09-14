@@ -28,7 +28,6 @@
 ******************************************************************************
 * Contents: Native high-level C interface to LAPACK function dsysv_rook
 * Author: Intel Corporation
-* Generated January, 2012
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -46,12 +45,14 @@ lapack_int LAPACKE_dsysv_rook( int matrix_layout, char uplo, lapack_int n,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dsy_nancheck( matrix_layout, uplo, n, a, lda ) ) {
-        return -5;
-    }
-    if( LAPACKE_dge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
-        return -8;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dsy_nancheck( matrix_layout, uplo, n, a, lda ) ) {
+            return -5;
+        }
+        if( LAPACKE_dge_nancheck( matrix_layout, n, nrhs, b, ldb ) ) {
+            return -8;
+        }
     }
 #endif
     /* Query optimal working array(s) size */

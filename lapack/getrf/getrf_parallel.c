@@ -67,6 +67,17 @@ double sqrt(double);
 #undef  GETRF_FACTOR
 #define GETRF_FACTOR 1.00
 
+
+#ifdef HAVE_C11
+#define	atomic_load_long(p)		__atomic_load_n(p, __ATOMIC_RELAXED)
+#define	atomic_store_long(p, v)		__atomic_store_n(p, v, __ATOMIC_RELAXED)
+#else
+#define	atomic_load_long(p)		(BLASLONG)(*(volatile BLASLONG*)(p))
+#define	atomic_store_long(p, v)		(*(volatile BLASLONG *)(p)) = (v)
+#endif
+
+
+
 static __inline BLASLONG FORMULA1(BLASLONG M, BLASLONG N, BLASLONG IS, BLASLONG BK, BLASLONG T) {
 
   double m = (double)(M - IS - BK);
@@ -156,7 +167,10 @@ static void inner_basic_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *ra
       }
     }
 
-    if ((js + REAL_GEMM_R >= n) && (mypos >= 0)) flag[mypos * CACHE_LINE_SIZE] = 0;
+    if ((js + REAL_GEMM_R >= n) && (mypos >= 0)) {
+	    MB;
+	    atomic_store_long(&flag[mypos * CACHE_LINE_SIZE], 0);
+    }
 
     for (is = 0; is < m; is += GEMM_P){
       min_i = m - is;
@@ -179,6 +193,7 @@ static void inner_basic_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *ra
 typedef struct {
   volatile BLASLONG working[MAX_CPU_NUMBER][CACHE_LINE_SIZE * DIVIDE_RATE];
 } job_t;
+
 
 #define ICOPY_OPERATION(M, N, A, LDA, X, Y, BUFFER) GEMM_ITCOPY(M, N, (FLOAT *)(A) + ((Y) + (X) * (LDA)) * COMPSIZE, LDA, BUFFER);
 #define OCOPY_OPERATION(M, N, A, LDA, X, Y, BUFFER) GEMM_ONCOPY(M, N, (FLOAT *)(A) + ((X) + (Y) * (LDA)) * COMPSIZE, LDA, BUFFER);
@@ -216,7 +231,7 @@ static int inner_advanced_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *
   FLOAT *sbb= sb;
 
   blasint *ipiv = (blasint *)args -> c;
-
+  BLASLONG jw;
   volatile BLASLONG *flag = (volatile BLASLONG *)args -> d;
 
   if (args -> a == NULL) {
@@ -245,8 +260,16 @@ static int inner_advanced_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *
   for (xxx = n_from, bufferside = 0; xxx < n_to; xxx += div_n, bufferside ++) {
 
     for (i = 0; i < args -> nthreads; i++)
+#if 1
+    {
+	do {
+	   jw =  atomic_load_long(&job[mypos].working[i][CACHE_LINE_SIZE * bufferside]);
+	} while (jw);
+	MB;
+    }
+#else
       while (job[mypos].working[i][CACHE_LINE_SIZE * bufferside]) {};
-
+#endif
     for(jjs = xxx; jjs < MIN(n_to, xxx + div_n); jjs += min_jj){
       min_jj = MIN(n_to, xxx + div_n) - jjs;
       if (min_jj > GEMM_UNROLL_N) min_jj = GEMM_UNROLL_N;
@@ -283,18 +306,19 @@ static int inner_advanced_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *
 		       b   + (is + jjs * lda) * COMPSIZE, lda, is);
       }
     }
-
     MB;
-    for (i = 0; i < args -> nthreads; i++)
-      job[mypos].working[i][CACHE_LINE_SIZE * bufferside] = (BLASLONG)buffer[bufferside];
-
+    for (i = 0; i < args -> nthreads; i++) {
+      atomic_store_long(&job[mypos].working[i][CACHE_LINE_SIZE * bufferside], (BLASLONG)buffer[bufferside]);
+    }
   }
 
-  flag[mypos * CACHE_LINE_SIZE] = 0;
+  MB;
+  atomic_store_long(&flag[mypos * CACHE_LINE_SIZE], 0);
 
   if (m == 0) {
+    MB;
     for (xxx = 0; xxx < DIVIDE_RATE; xxx++) {
-      job[mypos].working[mypos][CACHE_LINE_SIZE * xxx] = 0;
+      atomic_store_long(&job[mypos].working[mypos][CACHE_LINE_SIZE * xxx], 0);
     }
   }
 
@@ -318,7 +342,14 @@ static int inner_advanced_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *
 	for (xxx = range_n[current], bufferside = 0; xxx < range_n[current + 1]; xxx += div_n, bufferside ++) {
 
 	  if ((current != mypos) && (!is)) {
+#if 1
+		do {
+		   jw =  atomic_load_long(&job[current].working[mypos][CACHE_LINE_SIZE * bufferside]);
+	        } while (jw == 0);
+		MB;
+#else
 	    	    while(job[current].working[mypos][CACHE_LINE_SIZE * bufferside] == 0) {};
+#endif
 	  }
 
 	  KERNEL_OPERATION(min_i, MIN(range_n[current + 1] - xxx, div_n), k,
@@ -327,7 +358,7 @@ static int inner_advanced_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *
 
 	  MB;
 	  if (is + min_i >= m) {
-	    job[current].working[mypos][CACHE_LINE_SIZE * bufferside] = 0;
+	    atomic_store_long(&job[current].working[mypos][CACHE_LINE_SIZE * bufferside], 0);
 	  }
 	}
 
@@ -339,7 +370,14 @@ static int inner_advanced_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *
 
   for (i = 0; i < args -> nthreads; i++) {
     for (xxx = 0; xxx < DIVIDE_RATE; xxx++) {
+#if 1
+	do {
+	    jw = atomic_load_long(&job[mypos].working[i][CACHE_LINE_SIZE *xxx]);
+	} while(jw != 0);
+	MB;
+#else
       while (job[mypos].working[i][CACHE_LINE_SIZE * xxx] ) {};
+#endif
     }
   }
 
@@ -374,6 +412,7 @@ blasint CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa,
   BLASLONG i, j, k, is, bk;
 
   BLASLONG num_cpu;
+  BLASLONG f;
 
 #ifdef _MSC_VER
   BLASLONG flag[MAX_CPU_NUMBER * CACHE_LINE_SIZE];
@@ -473,7 +512,11 @@ blasint CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa,
       if (width > mn - is - bk) width = mn - is - bk;
     }
 
-    if (num_cpu > 0) exec_blas_async_wait(num_cpu, &queue[0]);
+
+    if (num_cpu > 0) {
+	    WMB;
+	    exec_blas_async_wait(num_cpu, &queue[0]);
+    }
 
     mm = m - bk - is;
     nn = n - bk - is;
@@ -501,11 +544,13 @@ blasint CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa,
       if (mm >= nn) {
 
 	width  = blas_quickdivide(nn + args -> nthreads - num_cpu, args -> nthreads - num_cpu - 1);
+	if (width == 0) width = nn;
 	if (nn < width) width = nn;
 	nn -= width;
 	range_N[num_cpu + 1] = range_N[num_cpu] + width;
 
 	width  = blas_quickdivide(mm + args -> nthreads - num_cpu, args -> nthreads - num_cpu - 1);
+	if (width == 0) width = mm;
 	if (mm < width) width = mm;
 	if (nn <=    0) width = mm;
 	mm -= width;
@@ -514,11 +559,13 @@ blasint CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa,
       } else {
 
 	width  = blas_quickdivide(mm + args -> nthreads - num_cpu, args -> nthreads - num_cpu - 1);
+	if (width == 0) width = mm;
 	if (mm < width) width = mm;
 	mm -= width;
 	range_M[num_cpu + 1] = range_M[num_cpu] + width;
 
 	width  = blas_quickdivide(nn + args -> nthreads - num_cpu, args -> nthreads - num_cpu - 1);
+	if (width == 0) width = nn;
 	if (nn < width) width = nn;
 	if (mm <=    0) width = nn;
 	nn -= width;
@@ -534,7 +581,7 @@ blasint CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa,
       queue[num_cpu].sa      = NULL;
       queue[num_cpu].sb      = NULL;
       queue[num_cpu].next    = &queue[num_cpu + 1];
-      flag[num_cpu * CACHE_LINE_SIZE] = 1;
+      atomic_store_long(&flag[num_cpu * CACHE_LINE_SIZE], 1);
 
       num_cpu ++;
 
@@ -561,8 +608,9 @@ blasint CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa,
     range_n_new[1] = offset + is + bk;
 
     if (num_cpu > 0) {
-
       queue[num_cpu - 1].next = NULL;
+
+      WMB;
 
       exec_blas_async(0, &queue[0]);
 
@@ -572,8 +620,16 @@ blasint CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa,
 
       if (iinfo && !info) info = iinfo + is;
 
-      for (i = 0; i < num_cpu; i ++) while (flag[i * CACHE_LINE_SIZE]) {};
-
+      for (i = 0; i < num_cpu; i ++) {
+#if 1
+	      do {
+		   f =  atomic_load_long(&flag[i*CACHE_LINE_SIZE]);
+	      } while (f != 0);
+	      MB;
+#else
+              while (flag[i*CACHE_LINE_SIZE]) {};
+#endif
+      }
       TRSM_ILTCOPY(bk, bk, a + (is +  is * lda) * COMPSIZE, lda, 0, sb);
 
     } else {
@@ -606,7 +662,7 @@ blasint CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa,
 
     blas_level1_thread(mode, bk, is + bk + offset + 1, mn + offset, (void *)dummyalpha,
 		       a + (- offset + is * lda) * COMPSIZE, lda, NULL, 0,
-		       ipiv, 1, (void *)LASWP_PLUS, args -> nthreads);
+		       ipiv, 1, (int (*)(void))LASWP_PLUS, args -> nthreads);
 
     is += bk;
   }
@@ -634,7 +690,6 @@ blasint CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa,
   BLASLONG range[MAX_CPU_NUMBER + 1];
 
   BLASLONG width, nn, num_cpu;
-
   volatile BLASLONG flag[MAX_CPU_NUMBER * CACHE_LINE_SIZE] __attribute__((aligned(128)));
 
 #ifndef COMPLEX
@@ -744,6 +799,8 @@ blasint CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa,
     nn = n - bk - is;
     if (width > nn) width = nn;
 
+    WMB;
+
     if (num_cpu > 1)  exec_blas_async_wait(num_cpu - 1, &queue[1]);
 
     range[0] = 0;
@@ -778,7 +835,7 @@ blasint CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa,
       queue[num_cpu].sa      = NULL;
       queue[num_cpu].sb      = NULL;
       queue[num_cpu].next    = &queue[num_cpu + 1];
-      flag[num_cpu * CACHE_LINE_SIZE] = 1;
+      atomic_store_long(&flag[num_cpu * CACHE_LINE_SIZE], 1);
 
       num_cpu ++;
     }
@@ -793,6 +850,7 @@ blasint CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa,
     range_n_new[0] = offset + is;
     range_n_new[1] = offset + is + bk;
 
+    WMB;
     if (num_cpu > 1) {
 
       exec_blas_async(1, &queue[1]);
@@ -828,7 +886,7 @@ blasint CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa,
 
 #endif
 
-      for (i = 1; i < num_cpu; i ++) while (flag[i * CACHE_LINE_SIZE]) {};
+      for (i = 1; i < num_cpu; i ++) while (atomic_load_long(&flag[i * CACHE_LINE_SIZE])) {};
 
       TRSM_ILTCOPY(bk, bk, a + (is +  is * lda) * COMPSIZE, lda, 0, sb);
 

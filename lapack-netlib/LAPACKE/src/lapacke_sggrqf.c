@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function sggrqf
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -46,12 +45,14 @@ lapack_int LAPACKE_sggrqf( int matrix_layout, lapack_int m, lapack_int p,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_sge_nancheck( matrix_layout, m, n, a, lda ) ) {
-        return -5;
-    }
-    if( LAPACKE_sge_nancheck( matrix_layout, p, n, b, ldb ) ) {
-        return -8;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_sge_nancheck( matrix_layout, m, n, a, lda ) ) {
+            return -5;
+        }
+        if( LAPACKE_sge_nancheck( matrix_layout, p, n, b, ldb ) ) {
+            return -8;
+        }
     }
 #endif
     /* Query optimal working array(s) size */

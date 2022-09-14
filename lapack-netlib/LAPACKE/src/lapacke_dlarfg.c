@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dlarfg
 * Author: Intel Corporation
-* Generated November, 2011
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -37,12 +36,14 @@ lapack_int LAPACKE_dlarfg( lapack_int n, double* alpha, double* x,
                            lapack_int incx, double* tau )
 {
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_d_nancheck( 1, alpha, 1 ) ) {
-        return -2;
-    }
-    if( LAPACKE_d_nancheck( 1+(n-2)*ABS(incx), x, incx ) ) {
-        return -3;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_d_nancheck( 1, alpha, 1 ) ) {
+            return -2;
+        }
+        if( LAPACKE_d_nancheck( n-1, x, incx ) ) {
+            return -3;
+        }
     }
 #endif
     return LAPACKE_dlarfg_work( n, alpha, x, incx, tau );

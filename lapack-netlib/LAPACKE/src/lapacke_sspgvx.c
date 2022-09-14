@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function sspgvx
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -47,24 +46,26 @@ lapack_int LAPACKE_sspgvx( int matrix_layout, lapack_int itype, char jobz,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_s_nancheck( 1, &abstol, 1 ) ) {
-        return -13;
-    }
-    if( LAPACKE_ssp_nancheck( n, ap ) ) {
-        return -7;
-    }
-    if( LAPACKE_ssp_nancheck( n, bp ) ) {
-        return -8;
-    }
-    if( LAPACKE_lsame( range, 'v' ) ) {
-        if( LAPACKE_s_nancheck( 1, &vl, 1 ) ) {
-            return -9;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_s_nancheck( 1, &abstol, 1 ) ) {
+            return -13;
         }
-    }
-    if( LAPACKE_lsame( range, 'v' ) ) {
-        if( LAPACKE_s_nancheck( 1, &vu, 1 ) ) {
-            return -10;
+        if( LAPACKE_ssp_nancheck( n, ap ) ) {
+            return -7;
+        }
+        if( LAPACKE_ssp_nancheck( n, bp ) ) {
+            return -8;
+        }
+        if( LAPACKE_lsame( range, 'v' ) ) {
+            if( LAPACKE_s_nancheck( 1, &vl, 1 ) ) {
+                return -9;
+            }
+        }
+        if( LAPACKE_lsame( range, 'v' ) ) {
+            if( LAPACKE_s_nancheck( 1, &vu, 1 ) ) {
+                return -10;
+            }
         }
     }
 #endif

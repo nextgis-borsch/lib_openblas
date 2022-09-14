@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function zggesx
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -58,12 +57,14 @@ lapack_int LAPACKE_zggesx( int matrix_layout, char jobvsl, char jobvsr,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_zge_nancheck( matrix_layout, n, n, a, lda ) ) {
-        return -8;
-    }
-    if( LAPACKE_zge_nancheck( matrix_layout, n, n, b, ldb ) ) {
-        return -10;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_zge_nancheck( matrix_layout, n, n, a, lda ) ) {
+            return -8;
+        }
+        if( LAPACKE_zge_nancheck( matrix_layout, n, n, b, ldb ) ) {
+            return -10;
+        }
     }
 #endif
     /* Allocate memory for working array(s) */
@@ -89,7 +90,7 @@ lapack_int LAPACKE_zggesx( int matrix_layout, char jobvsl, char jobvsr,
     if( info != 0 ) {
         goto exit_level_2;
     }
-    liwork = (lapack_int)iwork_query;
+    liwork = iwork_query;
     lwork = LAPACK_Z2INT( work_query );
     /* Allocate memory for work arrays */
     iwork = (lapack_int*)LAPACKE_malloc( sizeof(lapack_int) * liwork );

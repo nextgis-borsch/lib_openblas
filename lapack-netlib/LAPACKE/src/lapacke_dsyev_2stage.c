@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dsyev_2stage
 * Author: Intel Corporation
-* Generated December 2016
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -45,9 +44,11 @@ lapack_int LAPACKE_dsyev_2stage( int matrix_layout, char jobz, char uplo, lapack
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dsy_nancheck( matrix_layout, uplo, n, a, lda ) ) {
-        return -5;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dsy_nancheck( matrix_layout, uplo, n, a, lda ) ) {
+            return -5;
+        }
     }
 #endif
     /* Query optimal working array(s) size */

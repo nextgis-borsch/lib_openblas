@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function shgeqz
 * Author: Intel Corporation
-* Generated November 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -48,21 +47,23 @@ lapack_int LAPACKE_shgeqz( int matrix_layout, char job, char compq, char compz,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_sge_nancheck( matrix_layout, n, n, h, ldh ) ) {
-        return -8;
-    }
-    if( LAPACKE_lsame( compq, 'i' ) || LAPACKE_lsame( compq, 'v' ) ) {
-        if( LAPACKE_sge_nancheck( matrix_layout, n, n, q, ldq ) ) {
-            return -15;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_sge_nancheck( matrix_layout, n, n, h, ldh ) ) {
+            return -8;
         }
-    }
-    if( LAPACKE_sge_nancheck( matrix_layout, n, n, t, ldt ) ) {
-        return -10;
-    }
-    if( LAPACKE_lsame( compz, 'i' ) || LAPACKE_lsame( compz, 'v' ) ) {
-        if( LAPACKE_sge_nancheck( matrix_layout, n, n, z, ldz ) ) {
-            return -17;
+        if( LAPACKE_lsame( compq, 'i' ) || LAPACKE_lsame( compq, 'v' ) ) {
+            if( LAPACKE_sge_nancheck( matrix_layout, n, n, q, ldq ) ) {
+                return -15;
+            }
+        }
+        if( LAPACKE_sge_nancheck( matrix_layout, n, n, t, ldt ) ) {
+            return -10;
+        }
+        if( LAPACKE_lsame( compz, 'i' ) || LAPACKE_lsame( compz, 'v' ) ) {
+            if( LAPACKE_sge_nancheck( matrix_layout, n, n, z, ldz ) ) {
+                return -17;
+            }
         }
     }
 #endif

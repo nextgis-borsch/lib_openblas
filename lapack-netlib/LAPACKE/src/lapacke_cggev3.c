@@ -28,7 +28,6 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function cggev3
 * Author: Intel Corporation
-* Generated February, 2015
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -52,12 +51,14 @@ lapack_int LAPACKE_cggev3( int matrix_layout,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_cge_nancheck( matrix_layout, n, n, a, lda ) ) {
-        return -5;
-    }
-    if( LAPACKE_cge_nancheck( matrix_layout, n, n, b, ldb ) ) {
-        return -7;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_cge_nancheck( matrix_layout, n, n, a, lda ) ) {
+            return -5;
+        }
+        if( LAPACKE_cge_nancheck( matrix_layout, n, n, b, ldb ) ) {
+            return -7;
+        }
     }
 #endif
     /* Allocate memory for working array(s) */
